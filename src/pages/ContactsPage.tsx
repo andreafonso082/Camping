@@ -16,11 +16,11 @@ export default function ContactsPage() {
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.5 }}
-      className="pt-28 sm:pt-32 lg:pt-36 pb-20 md:pb-28 px-4 sm:px-6 bg-branco-quente min-h-screen"
+      className="pt-24 sm:pt-32 lg:pt-36 pb-20 md:pb-28 px-4 sm:px-6 bg-branco-quente min-h-screen"
     >
       <div className="max-w-6xl mx-auto">
         {/* Centered Header */}
-        <div className="text-center mb-12 md:mb-16 max-w-2xl mx-auto">
+        <div className="text-center mb-10 md:mb-16 max-w-2xl mx-auto">
           <motion.p
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
@@ -32,7 +32,7 @@ export default function ContactsPage() {
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="text-4xl sm:text-5xl md:text-7xl font-serif text-principal mb-4 sm:mb-6 uppercase tracking-tight"
+            className="text-3xl sm:text-5xl md:text-7xl font-serif text-principal mb-4 sm:mb-6 uppercase tracking-tight"
           >
             Contactos
           </motion.h1>
@@ -64,7 +64,7 @@ export default function ContactsPage() {
                 </h2>
                 <a
                   href="tel:+351281328887"
-                  className="inline-flex items-center min-h-[44px] text-lg font-serif font-bold text-principal hover:text-secundaria transition-colors tabular-nums whitespace-nowrap"
+                  className="inline-flex items-center min-h-[44px] text-base sm:text-lg font-serif font-bold text-principal hover:text-secundaria transition-colors tabular-nums whitespace-nowrap"
                 >
                   +351 281 328 887
                 </a>
@@ -145,7 +145,7 @@ export default function ContactsPage() {
             allowFullScreen={true}
             loading="lazy"
             title="Localização do Camping Ria Formosa em Cabanas de Tavira"
-            className="rounded-2xl md:rounded-[1.8rem] w-full h-[320px] sm:h-[440px]"
+            className="rounded-2xl md:rounded-[1.8rem] w-full h-[280px] sm:h-[400px] md:h-[440px]"
             referrerPolicy="strict-origin-when-cross-origin"
           />
         </motion.section>

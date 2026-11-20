@@ -117,7 +117,7 @@ export default function AlojamentosPage() {
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.4 }}
-      className="pt-28 sm:pt-32 lg:pt-36 pb-20 md:pb-28 px-4 sm:px-6 bg-branco-quente min-h-screen"
+      className="pt-24 sm:pt-32 lg:pt-36 pb-20 md:pb-28 px-4 sm:px-6 bg-branco-quente min-h-screen"
     >
       <div className="max-w-6xl mx-auto">
         {/* Editorial Page Header */}
@@ -143,20 +143,20 @@ export default function AlojamentosPage() {
 
             <Link
               to="/reservar"
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-3 bg-secundaria text-principal min-h-[48px] px-8 py-4 rounded-full font-bold text-xs uppercase tracking-[0.18em] hover:bg-principal hover:text-white transition-colors whitespace-nowrap shrink-0 self-start lg:self-auto"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 sm:gap-3 bg-secundaria text-principal min-h-[48px] px-6 sm:px-8 py-4 rounded-full font-bold text-xs uppercase tracking-[0.16em] sm:tracking-[0.18em] hover:bg-principal hover:text-white transition-colors sm:whitespace-nowrap shrink-0 self-start lg:self-auto"
             >
               Reservar Estadia
-              <ArrowRight className="w-4 h-4" />
+              <ArrowRight className="w-4 h-4 shrink-0" />
             </Link>
           </div>
 
           {/* Quick Jump Index Bar */}
-          <div className="mt-8 sm:mt-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+          <div className="mt-8 sm:mt-10 grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
             {[
-              { id: 'alveolos', label: 'Alvéolos', meta: '~350 espaços · Reserva online', icon: Tent },
-              { id: 'bungalows', label: 'Bungalows', meta: '5 unidades T2 · Reserva online', icon: Home },
-              { id: 'kampaoh', label: 'Kampaoh', meta: 'Glamping parceiro oficial', icon: Sparkles },
-              { id: 'mobile-homes', label: 'Mobile Homes', meta: 'Lotes 100–250 m² · Instalação', icon: Compass },
+              { id: 'alveolos', label: 'Alvéolos', meta: '~350 espaços', icon: Tent },
+              { id: 'bungalows', label: 'Bungalows', meta: '5 unidades T2', icon: Home },
+              { id: 'kampaoh', label: 'Kampaoh', meta: 'Glamping oficial', icon: Sparkles },
+              { id: 'mobile-homes', label: 'Mobile Homes', meta: 'Lotes 100–250 m²', icon: Compass },
             ].map((nav) => {
               const Icon = nav.icon;
               return (
@@ -164,14 +164,14 @@ export default function AlojamentosPage() {
                   key={nav.id}
                   type="button"
                   onClick={() => scrollToSection(nav.id)}
-                  className="bg-white p-4 sm:p-5 rounded-2xl border border-principal/10 hover:border-secundaria text-left transition-all flex items-center sm:items-start gap-4 cursor-pointer group min-h-[56px]"
+                  className="bg-white p-3.5 sm:p-5 rounded-2xl border border-principal/10 hover:border-secundaria text-left transition-all flex items-center sm:items-start gap-2.5 sm:gap-4 cursor-pointer group min-h-[56px]"
                 >
-                  <div className="w-10 h-10 rounded-xl bg-branco-quente text-principal flex items-center justify-center shrink-0 group-hover:bg-secundaria transition-colors">
+                  <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-branco-quente text-principal flex items-center justify-center shrink-0 group-hover:bg-secundaria transition-colors">
                     <Icon className="w-4 h-4" />
                   </div>
                   <div className="min-w-0">
-                    <p className="font-serif font-bold text-principal text-base">{nav.label}</p>
-                    <p className="text-xs text-texto-main/55 truncate mt-0.5">{nav.meta}</p>
+                    <p className="font-serif font-bold text-principal text-sm sm:text-base truncate">{nav.label}</p>
+                    <p className="text-[11px] sm:text-xs text-texto-main/55 truncate mt-0.5">{nav.meta}</p>
                   </div>
                 </button>
               );
@@ -190,7 +190,7 @@ export default function AlojamentosPage() {
             >
               {/* Image Side */}
               <div
-                className={`lg:col-span-6 overflow-hidden rounded-2xl md:rounded-3xl min-h-[240px] sm:min-h-[320px] lg:min-h-[430px] relative group ${
+                className={`lg:col-span-6 overflow-hidden rounded-2xl md:rounded-3xl h-56 sm:h-72 lg:h-auto lg:min-h-[430px] relative group ${
                   i % 2 !== 0 ? 'lg:order-2' : ''
                 }`}
               >
@@ -260,25 +260,25 @@ export default function AlojamentosPage() {
                       href={alojamento.externalHref}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center justify-center gap-3 bg-principal text-white min-h-[48px] px-8 sm:px-9 py-4 rounded-full font-bold hover:bg-secundaria hover:text-principal transition-colors uppercase tracking-[0.16em] text-xs whitespace-nowrap"
+                      className="inline-flex items-center justify-center gap-2.5 sm:gap-3 bg-principal text-white min-h-[48px] px-5 sm:px-9 py-4 rounded-full font-bold hover:bg-secundaria hover:text-principal transition-colors uppercase tracking-[0.14em] sm:tracking-[0.16em] text-[11px] sm:text-xs sm:whitespace-nowrap text-center"
                     >
-                      {alojamento.primaryLabel}
-                      <ExternalLink className="w-4 h-4" />
+                      <span>{alojamento.primaryLabel}</span>
+                      <ExternalLink className="w-4 h-4 shrink-0" />
                     </a>
                   ) : (
                     <Link
                       to={alojamento.primaryTo || '/alojamentos'}
-                      className="inline-flex items-center justify-center gap-3 bg-principal text-white min-h-[48px] px-8 sm:px-9 py-4 rounded-full font-bold hover:bg-secundaria hover:text-principal transition-colors uppercase tracking-[0.16em] text-xs whitespace-nowrap"
+                      className="inline-flex items-center justify-center gap-2.5 sm:gap-3 bg-principal text-white min-h-[48px] px-5 sm:px-9 py-4 rounded-full font-bold hover:bg-secundaria hover:text-principal transition-colors uppercase tracking-[0.14em] sm:tracking-[0.16em] text-[11px] sm:text-xs sm:whitespace-nowrap text-center"
                     >
-                      {alojamento.primaryLabel}
-                      <ArrowRight className="w-4 h-4" />
+                      <span>{alojamento.primaryLabel}</span>
+                      <ArrowRight className="w-4 h-4 shrink-0" />
                     </Link>
                   )}
 
                   {alojamento.secondaryReserveTo && (
                     <Link
                       to={alojamento.secondaryReserveTo}
-                      className="inline-flex items-center justify-center gap-2 min-h-[48px] px-7 py-4 rounded-full border border-principal/20 text-principal font-bold hover:border-principal hover:bg-branco-quente transition-colors uppercase tracking-[0.16em] text-xs whitespace-nowrap"
+                      className="inline-flex items-center justify-center gap-2 min-h-[48px] px-5 sm:px-7 py-4 rounded-full border border-principal/20 text-principal font-bold hover:border-principal hover:bg-branco-quente transition-colors uppercase tracking-[0.14em] sm:tracking-[0.16em] text-[11px] sm:text-xs sm:whitespace-nowrap text-center"
                     >
                       Reservar Agora
                     </Link>

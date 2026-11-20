@@ -127,7 +127,7 @@ export default function AboutPage() {
       className="bg-branco-quente min-h-screen"
     >
       {/* Hero Section */}
-      <section className="relative min-h-[60vh] md:min-h-[68vh] flex items-end pb-14 md:pb-20 pt-28 md:pt-36 px-4 sm:px-6 overflow-hidden">
+      <section className="relative min-h-[48vh] sm:min-h-[60vh] md:min-h-[68vh] flex items-end pb-10 sm:pb-14 md:pb-20 pt-24 sm:pt-28 md:pt-36 px-4 sm:px-6 overflow-hidden">
         <img
           src="/assets/entrada.jpg"
           alt="Entrada arborizada do Camping Ria Formosa"
@@ -144,21 +144,21 @@ export default function AboutPage() {
 
       {/* Metrics Strip */}
       <section className="bg-white border-b border-principal/10">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8 md:py-10 grid grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-7 md:py-10 grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-8">
           <div>
-            <p className="text-2xl sm:text-3xl font-serif font-bold text-principal tabular-nums">56.000 m²</p>
+            <p className="text-xl sm:text-3xl font-serif font-bold text-principal tabular-nums">56.000 m²</p>
             <p className="text-xs text-texto-main/60 mt-1">Área total perto da praia</p>
           </div>
           <div>
-            <p className="text-2xl sm:text-3xl font-serif font-bold text-principal tabular-nums">~500</p>
+            <p className="text-xl sm:text-3xl font-serif font-bold text-principal tabular-nums">~500</p>
             <p className="text-xs text-texto-main/60 mt-1">Árvores plantadas para sombra natural</p>
           </div>
           <div>
-            <p className="text-2xl sm:text-3xl font-serif font-bold text-principal tabular-nums">~350</p>
+            <p className="text-xl sm:text-3xl font-serif font-bold text-principal tabular-nums">~350</p>
             <p className="text-xs text-texto-main/60 mt-1">Alvéolos individuais identificados</p>
           </div>
           <div>
-            <p className="text-2xl sm:text-3xl font-serif font-bold text-principal tabular-nums">2 Blocos</p>
+            <p className="text-xl sm:text-3xl font-serif font-bold text-principal tabular-nums">2 Blocos</p>
             <p className="text-xs text-texto-main/60 mt-1">Sanitários modernos com painel solar</p>
           </div>
         </div>
@@ -208,7 +208,7 @@ export default function AboutPage() {
             </div>
           </div>
 
-          <div className="lg:col-span-5 bg-white p-8 md:p-10 rounded-[2rem] border border-principal/10 flex flex-col justify-between gap-8">
+          <div className="lg:col-span-5 bg-white p-6 sm:p-8 md:p-10 rounded-3xl md:rounded-[2rem] border border-principal/10 flex flex-col justify-between gap-6 sm:gap-8">
             <div className="space-y-6">
               <div className="flex items-center gap-3">
                 <div className="w-11 h-11 rounded-2xl bg-branco-quente text-principal flex items-center justify-center">
@@ -218,25 +218,25 @@ export default function AboutPage() {
                   <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-principal/50">
                     Atendimento
                   </p>
-                  <h3 className="text-2xl font-serif text-principal font-bold">Horário da Receção</h3>
+                  <h3 className="text-xl sm:text-2xl font-serif text-principal font-bold">Horário da Receção</h3>
                 </div>
               </div>
 
-              <div className="space-y-5 pt-2">
-                <div className="p-5 rounded-2xl bg-branco-quente/80">
+              <div className="space-y-4 sm:space-y-5 pt-2">
+                <div className="p-4 sm:p-5 rounded-2xl bg-branco-quente/80">
                   <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-principal/50 mb-1">
                     Horário de Verão
                   </p>
-                  <p className="text-xl font-serif font-bold text-principal tabular-nums">
+                  <p className="text-lg sm:text-xl font-serif font-bold text-principal tabular-nums">
                     08h00 às 19h00
                   </p>
                 </div>
 
-                <div className="p-5 rounded-2xl bg-branco-quente/80">
+                <div className="p-4 sm:p-5 rounded-2xl bg-branco-quente/80">
                   <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-principal/50 mb-1">
                     Horário de Inverno
                   </p>
-                  <p className="text-xl font-serif font-bold text-principal tabular-nums">
+                  <p className="text-lg sm:text-xl font-serif font-bold text-principal tabular-nums">
                     08h00 às 13h00 · 14h00 às 19h00
                   </p>
                 </div>
@@ -267,7 +267,7 @@ export default function AboutPage() {
               </p>
             </div>
 
-            <div className="flex flex-wrap sm:inline-flex w-full sm:w-auto gap-1.5 p-1.5 bg-white rounded-2xl border border-principal/10 shrink-0">
+            <div className="grid grid-cols-2 sm:inline-flex w-full sm:w-auto gap-1.5 p-1.5 bg-white rounded-2xl border border-principal/10 shrink-0">
               {(
                 [
                   { id: 'todas', label: 'Todas (12)' },
@@ -280,7 +280,7 @@ export default function AboutPage() {
                   key={tab.id}
                   type="button"
                   onClick={() => setActiveCategory(tab.id)}
-                  className={`flex-1 sm:flex-initial min-h-[44px] px-3 sm:px-4 py-2.5 rounded-xl text-xs font-semibold transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
+                  className={`min-h-[44px] px-2.5 sm:px-4 py-2.5 rounded-xl text-[11px] sm:text-xs font-semibold transition-colors sm:whitespace-nowrap text-center cursor-pointer ${
                     activeCategory === tab.id
                       ? 'bg-principal text-white'
                       : 'text-principal/65 hover:text-principal'
@@ -379,15 +379,15 @@ export default function AboutPage() {
             <div className="pt-3 sm:pt-4 flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-3 sm:gap-4">
               <Link
                 to="/ria-formosa"
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-3 bg-secundaria text-principal min-h-[48px] px-7 py-4 rounded-full text-xs font-bold uppercase tracking-[0.18em] hover:bg-white transition-colors whitespace-nowrap"
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 sm:gap-3 bg-secundaria text-principal min-h-[48px] px-5 sm:px-7 py-4 rounded-full text-[11px] sm:text-xs font-bold uppercase tracking-[0.14em] sm:tracking-[0.18em] hover:bg-white transition-colors sm:whitespace-nowrap text-center"
               >
                 <MapPin className="w-4 h-4 shrink-0" />
-                Explorar Ria Formosa &amp; Tavira
+                <span>Explorar Ria Formosa &amp; Tavira</span>
                 <ArrowRight className="w-4 h-4 shrink-0" />
               </Link>
               <Link
                 to="/reservar"
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 border border-white/30 text-white min-h-[48px] px-7 py-4 rounded-full text-xs font-bold uppercase tracking-[0.18em] hover:bg-white hover:text-principal transition-colors whitespace-nowrap"
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 border border-white/30 text-white min-h-[48px] px-5 sm:px-7 py-4 rounded-full text-[11px] sm:text-xs font-bold uppercase tracking-[0.14em] sm:tracking-[0.18em] hover:bg-white hover:text-principal transition-colors sm:whitespace-nowrap text-center"
               >
                 Reservar Estadia
               </Link>

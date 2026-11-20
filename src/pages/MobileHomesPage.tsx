@@ -63,7 +63,7 @@ export default function MobileHomesPage() {
           <motion.h1 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="text-4xl sm:text-5xl md:text-7xl font-serif text-white mb-4 sm:mb-6 uppercase tracking-tight"
+            className="text-3xl sm:text-5xl md:text-7xl font-serif text-white mb-4 sm:mb-6 uppercase tracking-tight"
           >
             Mobile Homes
           </motion.h1>
@@ -176,7 +176,7 @@ export default function MobileHomesPage() {
 
         {/* CTA */}
         <motion.div {...fadeInUp} className="text-center">
-          <Link to="/reservar?tipo=mobile-homes" className="w-full sm:w-auto inline-flex items-center justify-center min-h-[50px] bg-principal text-white px-8 sm:px-14 py-4 sm:py-5 rounded-full font-bold uppercase tracking-widest text-xs sm:text-sm shadow-2xl hover:bg-secundaria hover:text-principal transition-all duration-500">
+          <Link to="/reservar?tipo=mobile-homes" className="w-full sm:w-auto inline-flex items-center justify-center min-h-[50px] bg-principal text-white px-6 sm:px-14 py-4 sm:py-5 rounded-full font-bold uppercase tracking-wider sm:tracking-widest text-xs sm:text-sm shadow-2xl hover:bg-secundaria hover:text-principal transition-all duration-500 text-center">
             Contactar sobre Mobile Homes
           </Link>
         </motion.div>

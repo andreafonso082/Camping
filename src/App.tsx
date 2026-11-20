@@ -6,7 +6,7 @@
 import { AnimatePresence, motion, useScroll, useTransform } from 'motion/react';
 import { BrowserRouter, Routes, Route, Link, useLocation, useNavigate } from 'react-router-dom';
 import { useEffect, useState, useRef } from 'react';
-import { ArrowRight, ExternalLink, MapPin, Menu, Phone, X } from 'lucide-react';
+import { ArrowRight, ExternalLink, MapPin, Menu, Phone, User, X } from 'lucide-react';
 import PriceTables from './components/PriceTables';
 import ContactsPage from './pages/ContactsPage';
 import AlojamentosPage from './pages/AlojamentosPage';
@@ -64,11 +64,13 @@ function AnimatedTitle({ text, className }: { text: string, className?: string }
 
 function Counter({ value, sub }: { value: string, sub: string }) {
   const countRef = useRef(null);
+  const hasDigits = /\d/.test(value);
   const [displayValue, setDisplayValue] = useState(0);
   const target = parseInt(value.replace(/\D/g, '')) || 0;
   const suffix = value.replace(/[0-9]/g, '');
 
   useEffect(() => {
+    if (!hasDigits) return;
     let start = 0;
     const duration = 2000;
     const increment = target / (duration / 16);
@@ -92,12 +94,12 @@ function Counter({ value, sub }: { value: string, sub: string }) {
 
     if (countRef.current) observer.observe(countRef.current);
     return () => observer.disconnect();
-  }, [target]);
+  }, [target, hasDigits]);
 
   return (
     <div ref={countRef} className="border-t border-principal/15 pt-5 group hover:border-secundaria transition-colors duration-300">
-      <div className="text-3xl font-serif font-bold text-principal tabular-nums group-hover:text-secundaria transition-colors duration-300">
-        {displayValue}{suffix}
+      <div className="text-2xl sm:text-3xl font-serif font-bold text-principal tabular-nums group-hover:text-secundaria transition-colors duration-300">
+        {hasDigits ? `${displayValue}${suffix}` : value}
       </div>
       <div className="text-[11px] uppercase tracking-[0.18em] text-texto-main/55 mt-1.5 font-semibold">{sub}</div>
     </div>
@@ -149,7 +151,7 @@ function Home() {
       exit={{ opacity: 0 }}
       transition={{ duration: 0.5 }}
     >
-      <section className="relative min-h-screen w-full flex items-center justify-center text-white overflow-hidden pt-20">
+      <section className="relative min-h-[88svh] sm:min-h-screen w-full flex items-center justify-center text-white overflow-hidden pt-24 pb-20 sm:pt-28 sm:pb-24">
         <motion.div style={{ y, scale }} className="absolute inset-0 w-full h-full">
           <iframe 
             className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[177.77vh] h-[100vh] min-w-full min-h-[56.25vw] pointer-events-none opacity-80"
@@ -163,19 +165,19 @@ function Home() {
         </motion.div>
         <div className="absolute inset-0 bg-black/35" />
         <div className="absolute inset-0 bg-gradient-to-b from-black/65 via-black/30 to-principal/85" />
-        <div className="relative z-10 text-center px-6 max-w-5xl">
-          <p className="text-xs font-semibold uppercase tracking-[0.26em] text-secundaria mb-5">
+        <div className="relative z-10 text-center px-4 sm:px-6 max-w-5xl w-full">
+          <p className="text-[11px] sm:text-xs font-semibold uppercase tracking-[0.2em] sm:tracking-[0.26em] text-secundaria mb-4 sm:mb-5">
             Cabanas de Tavira · Ria Formosa · Algarve
           </p>
           <AnimatedTitle 
             text="DESCUBRA O ALGARVE AO RITMO DA NATUREZA"
-            className="text-4xl sm:text-5xl md:text-[64px] font-serif mb-6 leading-[1.08] [text-wrap:balance]"
+            className="text-3xl sm:text-5xl md:text-[64px] font-serif mb-5 sm:mb-6 leading-[1.1] [text-wrap:balance]"
           />
           <motion.p 
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.4 }}
-            className="text-base sm:text-xl mb-10 max-w-2xl mx-auto font-light text-white/90 leading-relaxed"
+            className="text-sm sm:text-xl mb-8 sm:mb-10 max-w-2xl mx-auto font-light text-white/90 leading-relaxed"
           >
             Entre a tranquilidade de 56.000 m² arborizados e a beleza da Ria Formosa, encontre o lugar ideal para as suas próximas férias.
           </motion.p>
@@ -183,12 +185,12 @@ function Home() {
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.6 }}
-            className="flex flex-col sm:flex-row gap-4 justify-center"
+            className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center"
           >
-            <Link to="/alojamentos" className="bg-secundaria hover:bg-white text-principal px-10 py-4 rounded-full font-bold text-xs uppercase tracking-[0.18em] transition-colors duration-200 shadow-2xl whitespace-nowrap">
+            <Link to="/alojamentos" className="w-full sm:w-auto inline-flex items-center justify-center bg-secundaria hover:bg-white text-principal min-h-[48px] px-7 sm:px-10 py-4 rounded-full font-bold text-xs uppercase tracking-[0.16em] sm:tracking-[0.18em] transition-colors duration-200 shadow-2xl whitespace-nowrap">
               Explorar Alojamentos
             </Link>
-            <Link to="/reservar" className="bg-white/10 border border-white/40 hover:bg-white hover:text-principal text-white px-10 py-4 rounded-full font-bold text-xs uppercase tracking-[0.18em] transition-colors duration-200 backdrop-blur-sm whitespace-nowrap">
+            <Link to="/reservar" className="w-full sm:w-auto inline-flex items-center justify-center bg-white/10 border border-white/40 hover:bg-white hover:text-principal text-white min-h-[48px] px-7 sm:px-10 py-4 rounded-full font-bold text-xs uppercase tracking-[0.16em] sm:tracking-[0.18em] transition-colors duration-200 backdrop-blur-sm whitespace-nowrap">
               Reservar Estadia
             </Link>
           </motion.div>
@@ -206,9 +208,9 @@ function Home() {
 
       <motion.section 
         {...fadeInUp}
-        className="bg-white p-5 sm:p-6 md:p-8 relative z-20 -mt-10 md:-mt-14 mx-4 sm:mx-6 md:mx-auto max-w-6xl rounded-3xl shadow-[0_24px_60px_-15px_rgba(0,61,93,0.18)] border border-principal/10"
+        className="bg-white p-4 sm:p-6 md:p-8 relative z-20 -mt-10 md:-mt-14 mx-4 sm:mx-6 md:mx-auto max-w-6xl rounded-3xl shadow-[0_24px_60px_-15px_rgba(0,61,93,0.18)] border border-principal/10"
       >
-        <form onSubmit={handleQuickSearch} className="grid grid-cols-2 md:grid-cols-5 gap-4 md:gap-5 items-end">
+        <form onSubmit={handleQuickSearch} className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-3.5 sm:gap-4 md:gap-5 items-end">
             <div className="flex flex-col gap-1.5">
               <label className="text-[10px] uppercase tracking-[0.2em] font-bold text-principal/55 px-1">Check-in</label>
               <input
@@ -266,13 +268,13 @@ function Home() {
                 <option value="3">3 Crianças</option>
               </select>
             </div>
-            <button type="submit" className="col-span-2 md:col-span-1 bg-principal text-white h-[48px] rounded-xl font-bold hover:bg-secundaria hover:text-principal transition-colors duration-200 uppercase tracking-[0.18em] text-xs cursor-pointer whitespace-nowrap">
+            <button type="submit" className="col-span-1 sm:col-span-2 md:col-span-1 bg-principal text-white h-[48px] rounded-xl font-bold hover:bg-secundaria hover:text-principal transition-colors duration-200 uppercase tracking-[0.18em] text-xs cursor-pointer whitespace-nowrap">
               Verificar
             </button>
         </form>
       </motion.section>
 
-      <section className="py-28 px-6 bg-white overflow-hidden">
+      <section className="py-16 sm:py-22 md:py-28 px-4 sm:px-6 bg-white overflow-hidden">
         <div className="max-w-6xl mx-auto">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-16 items-stretch">
             <motion.div 
@@ -311,7 +313,7 @@ function Home() {
               transition={{ duration: 0.8 }}
               className="lg:col-span-6"
             >
-              <div className="overflow-hidden rounded-3xl shadow-xl h-96 lg:h-full min-h-[420px]">
+              <div className="overflow-hidden rounded-3xl shadow-xl h-64 sm:h-80 lg:h-full lg:min-h-[420px]">
                 <img 
                   src="/assets/entrada.jpg" 
                   alt="Entrada arborizada do Camping Ria Formosa" 
@@ -323,7 +325,7 @@ function Home() {
         </div>
       </section>
 
-      <section className="py-28 px-6 bg-branco-quente">
+      <section className="py-16 sm:py-22 md:py-28 px-4 sm:px-6 bg-branco-quente">
         <div className="max-w-6xl mx-auto">
           <motion.div 
             {...fadeInUp}
@@ -462,12 +464,12 @@ function Home() {
                     className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-110"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-principal/90 via-principal/25 to-transparent opacity-85 group-hover:opacity-100 transition-opacity duration-500" />
-                  <div className="absolute bottom-0 left-0 right-0 p-6 transform translate-y-2 group-hover:translate-y-0 transition-transform duration-500 ease-out">
+                  <div className="absolute bottom-0 left-0 right-0 p-6 transform lg:translate-y-2 lg:group-hover:translate-y-0 transition-transform duration-500 ease-out">
                     <div className="w-8 group-hover:w-14 h-0.5 bg-secundaria mb-3 transition-all duration-500" />
                     <div className="text-white font-serif text-xl font-bold group-hover:text-secundaria transition-colors duration-300">
                       {item.title}
                     </div>
-                    <p className="text-white/80 text-xs mt-1 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+                    <p className="text-white/80 text-xs mt-1 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity duration-500">
                       {item.subtitle}
                     </p>
                   </div>
@@ -477,13 +479,13 @@ function Home() {
           </div>
 
           {/* Destination Spotlight Banner */}
-          <div className="bg-branco-quente rounded-[2.5rem] border border-principal/10 overflow-hidden grid grid-cols-1 lg:grid-cols-12 items-stretch">
-            <div className="lg:col-span-6 p-8 md:p-14 flex flex-col justify-center space-y-5">
+          <div className="bg-branco-quente rounded-3xl md:rounded-[2.5rem] border border-principal/10 overflow-hidden grid grid-cols-1 lg:grid-cols-12 items-stretch">
+            <div className="lg:col-span-6 p-6 sm:p-8 md:p-14 flex flex-col justify-center space-y-5">
               <div className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-principal/55">
                 <MapPin className="w-4 h-4 text-secundaria" />
                 Guia da Região
               </div>
-              <h3 className="text-3xl md:text-4xl font-serif text-principal leading-tight [text-wrap:balance]">
+              <h3 className="text-2xl sm:text-3xl md:text-4xl font-serif text-principal leading-tight [text-wrap:balance]">
                 Ria Formosa, Cabanas, Tavira e o Sotavento Algarvio
               </h3>
               <p className="text-sm md:text-base text-texto-main/70 font-light leading-relaxed">
@@ -492,14 +494,14 @@ function Home() {
               <div className="pt-2">
                 <Link
                   to="/ria-formosa"
-                  className="inline-flex items-center gap-3 bg-principal text-white px-8 py-4 rounded-full font-bold text-xs uppercase tracking-[0.18em] hover:bg-secundaria hover:text-principal transition-colors whitespace-nowrap"
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 sm:gap-3 bg-principal text-white min-h-[48px] px-5 sm:px-8 py-4 rounded-full font-bold text-[11px] sm:text-xs uppercase tracking-[0.14em] sm:tracking-[0.18em] hover:bg-secundaria hover:text-principal transition-colors sm:whitespace-nowrap text-center"
                 >
-                  Explorar Ria Formosa &amp; Tavira
-                  <ArrowRight className="w-4 h-4" />
+                  <span>Explorar Ria Formosa &amp; Tavira</span>
+                  <ArrowRight className="w-4 h-4 shrink-0" />
                 </Link>
               </div>
             </div>
-            <div className="lg:col-span-6 min-h-[280px] relative">
+            <div className="lg:col-span-6 min-h-[240px] sm:min-h-[280px] relative">
               <img
                 src={cabanasImg}
                 alt="Marginal de Cabanas de Tavira e acesso à Ilha de Cabanas"
@@ -514,15 +516,15 @@ function Home() {
         <TestimonialsCarousel />
       </motion.div>
 
-      <motion.section {...fadeInUp} className="py-24 px-6 bg-branco-quente border-t border-principal/10">
+      <motion.section {...fadeInUp} className="py-16 sm:py-24 px-4 sm:px-6 bg-branco-quente border-t border-principal/10">
         <div className="max-w-4xl mx-auto text-center space-y-8">
-          <h2 className="text-3xl md:text-5xl font-serif text-principal [text-wrap:balance]">
+          <h2 className="text-2xl sm:text-3xl md:text-5xl font-serif text-principal [text-wrap:balance]">
             Pronto para a sua próxima estadia na Ria Formosa?
           </h2>
           <div>
             <Link 
               to="/reservar"
-              className="inline-flex items-center gap-3 bg-secundaria text-principal px-12 py-5 rounded-full font-bold uppercase tracking-[0.18em] text-xs hover:bg-principal hover:text-white transition-colors duration-200 whitespace-nowrap"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-3 bg-secundaria text-principal min-h-[48px] px-8 sm:px-12 py-4 sm:py-5 rounded-full font-bold uppercase tracking-[0.18em] text-xs hover:bg-principal hover:text-white transition-colors duration-200 whitespace-nowrap"
             >
               Reserve já
               <ArrowRight className="w-4 h-4" />
@@ -549,6 +551,8 @@ export function App() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, [location.pathname]);
 
+  const isAdminRoute = location.pathname.startsWith('/admin');
+
   const hasDarkHero =
     location.pathname === '/' ||
     location.pathname === '/sobre-nos' ||
@@ -565,20 +569,21 @@ export function App() {
   ];
 
   return (
-    <div className="min-h-screen bg-branco-quente text-texto-main font-sans selection:bg-secundaria selection:text-principal antialiased overflow-x-hidden">
+    <div className={`min-h-screen bg-branco-quente text-texto-main font-sans selection:bg-secundaria selection:text-principal antialiased ${isAdminRoute ? 'overflow-x-clip' : 'overflow-x-hidden'}`}>
       <ScrollToTop />
-      <header
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 pl-0 pr-4 sm:pr-6 md:pr-10 flex justify-between items-center ${
-          isScrolled || mobileMenuOpen
-            ? 'h-16 md:h-20 bg-white/95 shadow-xl backdrop-blur-md border-b border-gray-100'
-            : 'h-20 md:h-24 lg:h-28 bg-transparent'
-        }`}
-      >
-        <Link to="/" className="flex items-center h-full hover:opacity-90 transition shrink-0">
+      {!isAdminRoute && (
+        <header
+          className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 pl-2 sm:pl-3 lg:pl-0 pr-3 sm:pr-6 md:pr-10 flex justify-between items-center gap-2 ${
+            isScrolled || mobileMenuOpen
+              ? 'h-16 md:h-20 bg-white/95 shadow-xl backdrop-blur-md border-b border-gray-100'
+              : 'h-16 sm:h-20 md:h-24 lg:h-28 bg-transparent'
+          }`}
+        >
+        <Link to="/" className="flex items-center h-full py-2 lg:py-0 hover:opacity-90 transition shrink-0 min-w-0">
           <img
             src="/assets/logo-camping.png"
             alt="Camping Ria Formosa"
-            className={`transition-all duration-500 h-full w-auto object-contain block m-0 p-0 ${
+            className={`transition-all duration-500 h-full max-h-12 sm:max-h-16 lg:max-h-none w-auto max-w-[140px] sm:max-w-none object-contain block m-0 p-0 ${
               useLightHeaderContent ? 'brightness-0 invert drop-shadow-sm' : ''
             }`}
           />
@@ -613,16 +618,29 @@ export function App() {
           ))}
         </nav>
 
-        <div className="flex items-center gap-2 sm:gap-4 shrink-0">
+        <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
           <Link
             to="/reservar"
-            className={`px-5 sm:px-8 py-2.5 sm:py-3.5 rounded-full text-[10px] sm:text-[11px] font-black uppercase tracking-[0.16em] sm:tracking-[0.2em] transition-all duration-300 shadow-lg whitespace-nowrap shrink-0 min-h-[40px] sm:min-h-[44px] inline-flex items-center ${
+            className={`px-4 sm:px-8 py-2 sm:py-3.5 rounded-full text-[10px] sm:text-[11px] font-black uppercase tracking-[0.14em] sm:tracking-[0.2em] transition-all duration-300 shadow-lg whitespace-nowrap shrink-0 min-h-[40px] sm:min-h-[44px] inline-flex items-center ${
               useLightHeaderContent
                 ? 'bg-secundaria text-principal hover:bg-white hover:text-principal'
                 : 'bg-principal hover:bg-secundaria text-white hover:text-principal'
             }`}
           >
             Reservar
+          </Link>
+
+          <Link
+            to="/admin"
+            title="Área Reservada"
+            aria-label="Aceder ao Backoffice"
+            className={`w-9 h-9 sm:w-10 sm:h-10 rounded-full inline-flex items-center justify-center transition-colors duration-200 shrink-0 ${
+              useLightHeaderContent
+                ? 'text-white/60 hover:text-white hover:bg-white/10'
+                : 'text-principal/45 hover:text-principal hover:bg-principal/5'
+            }`}
+          >
+            <User className="w-4 h-4" />
           </Link>
 
           <button
@@ -639,11 +657,13 @@ export function App() {
             {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
           </button>
         </div>
-      </header>
+        </header>
+      )}
 
       {/* Mobile & Tablet Navigation Drawer */}
-      <AnimatePresence>
-        {mobileMenuOpen && (
+      {!isAdminRoute && (
+        <AnimatePresence>
+          {mobileMenuOpen && (
           <motion.div
             initial={{ opacity: 0, y: -12 }}
             animate={{ opacity: 1, y: 0 }}
@@ -688,10 +708,19 @@ export function App() {
                 <Phone className="w-4 h-4 text-secundaria" />
                 Receção: +351 281 328 887
               </a>
+              <Link
+                to="/admin"
+                onClick={() => setMobileMenuOpen(false)}
+                className="w-full min-h-[44px] text-principal/55 hover:text-principal rounded-2xl px-5 flex items-center justify-center gap-2 text-xs font-semibold uppercase tracking-[0.16em] transition-colors"
+              >
+                <User className="w-3.5 h-3.5" />
+                Área Reservada
+              </Link>
             </div>
           </motion.div>
-        )}
-      </AnimatePresence>
+          )}
+        </AnimatePresence>
+      )}
       
       <main className="pt-0">
         <AnimatePresence mode="wait">
@@ -710,31 +739,32 @@ export function App() {
         </AnimatePresence>
       </main>
 
-      <footer className="bg-principal text-white py-24 px-6 overflow-hidden relative">
+      {!isAdminRoute && (
+        <footer className="bg-principal text-white py-14 sm:py-20 md:py-24 px-4 sm:px-6 overflow-hidden relative">
         <div className="absolute top-0 right-0 w-96 h-96 bg-white/5 rounded-full blur-3xl -mr-48 -mt-48" />
-        <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-12 relative z-10 text-left">
-          <div className="md:col-span-1">
-            <img src="/assets/logo-camping.png" alt="Camping Ria Formosa" className="h-16 w-auto object-contain brightness-0 invert mb-8" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
-            <p className="text-white/60 leading-relaxed font-light">
+        <div className="max-w-6xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10 md:gap-12 relative z-10 text-left">
+          <div className="sm:col-span-2 lg:col-span-1">
+            <img src="/assets/logo-camping.png" alt="Camping Ria Formosa" className="h-14 sm:h-16 w-auto object-contain brightness-0 invert mb-6 sm:mb-8" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+            <p className="text-white/60 leading-relaxed font-light text-sm sm:text-base">
               Descubra a harmonia perfeita entre a natureza algarvia e o conforto moderno. O seu refúgio na Ria Formosa.
             </p>
           </div>
           <div>
-            <h4 className="font-serif font-bold text-xl mb-6 text-secundaria text-left">Onde Estamos</h4>
-            <p className="text-white/70 font-light leading-relaxed">
+            <h4 className="font-serif font-bold text-xl mb-4 sm:mb-6 text-secundaria text-left">Onde Estamos</h4>
+            <p className="text-white/70 font-light leading-relaxed text-sm sm:text-base">
               Quinta da Gomeira <br/>
               8800-058 Cabanas de Tavira <br/>
               Algarve, Portugal
             </p>
           </div>
           <div>
-            <h4 className="font-serif font-bold text-xl mb-6 text-secundaria text-left">Contactos</h4>
-            <p className="text-white/70 font-light mb-2">+351 281 328 887</p>
-            <p className="text-white/70 font-light hover:text-secundaria transition-colors cursor-pointer underline underline-offset-4 decoration-white/20">info@campingriaformosa.com</p>
+            <h4 className="font-serif font-bold text-xl mb-4 sm:mb-6 text-secundaria text-left">Contactos</h4>
+            <p className="text-white/70 font-light mb-2 text-sm sm:text-base">+351 281 328 887</p>
+            <a href="mailto:info@campingriaformosa.com" className="text-white/70 font-light hover:text-secundaria transition-colors cursor-pointer underline underline-offset-4 decoration-white/20 text-sm sm:text-base break-all">info@campingriaformosa.com</a>
           </div>
           <div>
-            <h4 className="font-serif font-bold text-xl mb-6 text-secundaria text-left">Links Rápidos</h4>
-            <nav className="flex flex-col gap-3 font-light text-white/70">
+            <h4 className="font-serif font-bold text-xl mb-4 sm:mb-6 text-secundaria text-left">Links Rápidos</h4>
+            <nav className="flex flex-col gap-3 font-light text-white/70 text-sm sm:text-base">
               <Link to="/" className="hover:text-secundaria transition-colors">Início</Link>
               <Link to="/sobre-nos" className="hover:text-secundaria transition-colors">Sobre Nós</Link>
               <Link to="/ria-formosa" className="hover:text-secundaria transition-colors">Ria Formosa &amp; Tavira</Link>
@@ -745,7 +775,7 @@ export function App() {
             </nav>
           </div>
         </div>
-        <div className="max-w-6xl mx-auto border-t border-white/10 mt-20 pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-white/40 text-xs tracking-widest uppercase">
+        <div className="max-w-6xl mx-auto border-t border-white/10 mt-12 sm:mt-16 md:mt-20 pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-white/40 text-xs tracking-widest uppercase text-center md:text-left">
           <p>© 2026 Camping Ria Formosa. Todos os direitos reservados.</p>
           <div className="flex gap-6">
             <a href="#" className="hover:text-white transition-colors">Instagram</a>
@@ -753,7 +783,8 @@ export function App() {
             <a href="#" className="hover:text-white transition-colors">TripAdvisor</a>
           </div>
         </div>
-      </footer>
+        </footer>
+      )}
     </div>
   );
 }

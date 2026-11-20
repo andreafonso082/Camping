@@ -87,7 +87,7 @@ export default function BungalowsPage() {
       className="bg-branco-quente min-h-screen"
     >
       {/* Hero Section */}
-      <section className="relative min-h-[60vh] md:min-h-[65vh] flex items-end pb-14 md:pb-20 pt-28 md:pt-36 px-4 sm:px-6 overflow-hidden">
+      <section className="relative min-h-[54vh] sm:min-h-[60vh] md:min-h-[65vh] flex items-end pb-12 sm:pb-14 md:pb-20 pt-24 sm:pt-28 md:pt-36 px-4 sm:px-6 overflow-hidden">
         <img
           src="/assets/aistudio/bungalows.jpg"
           alt="Bungalows T2 do Camping Ria Formosa"
@@ -102,21 +102,21 @@ export default function BungalowsPage() {
           <h1 className="text-3xl sm:text-5xl md:text-6xl font-serif leading-[1.08] max-w-3xl [text-wrap:balance] mb-4 sm:mb-6">
             Bungalows T2 na Ria Formosa
           </h1>
-          <p className="text-base sm:text-lg text-white/85 max-w-2xl font-light leading-relaxed mb-8 sm:mb-10">
+          <p className="text-base sm:text-lg text-white/85 max-w-2xl font-light leading-relaxed mb-7 sm:mb-10">
             Alojamento cómodo a preços convidativos numa zona reservada e arborizada do parque, com
             ar condicionado, cozinha equipada e acesso gratuito às piscinas.
           </p>
           <div className="flex flex-col sm:flex-row sm:flex-wrap gap-3 sm:gap-4">
             <Link
               to="/reservar?tipo=bungalows"
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-3 bg-secundaria text-principal min-h-[48px] px-8 py-4 rounded-full font-bold text-xs uppercase tracking-[0.18em] hover:bg-white transition-colors whitespace-nowrap"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 sm:gap-3 bg-secundaria text-principal min-h-[48px] px-5 sm:px-8 py-4 rounded-full font-bold text-[11px] sm:text-xs uppercase tracking-[0.14em] sm:tracking-[0.18em] hover:bg-white transition-colors sm:whitespace-nowrap text-center"
             >
-              Reservar Bungalow
-              <ArrowRight className="w-4 h-4" />
+              <span>Reservar Bungalow</span>
+              <ArrowRight className="w-4 h-4 shrink-0" />
             </Link>
             <a
               href="#classes"
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 border border-white/35 text-white min-h-[48px] px-8 py-4 rounded-full font-bold text-xs uppercase tracking-[0.18em] hover:bg-white hover:text-principal transition-colors whitespace-nowrap"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 border border-white/35 text-white min-h-[48px] px-5 sm:px-8 py-4 rounded-full font-bold text-[11px] sm:text-xs uppercase tracking-[0.14em] sm:tracking-[0.18em] hover:bg-white hover:text-principal transition-colors sm:whitespace-nowrap text-center"
             >
               Comparar Classe A e B
             </a>
@@ -188,13 +188,13 @@ export default function BungalowsPage() {
             {classes.map((cls) => (
               <div
                 key={cls.key}
-                className="bg-white rounded-3xl md:rounded-[2.5rem] p-6 sm:p-8 md:p-10 border border-principal/10 flex flex-col justify-between gap-7 sm:gap-8"
+                className="bg-white rounded-3xl md:rounded-[2.5rem] p-5 sm:p-8 md:p-10 border border-principal/10 flex flex-col justify-between gap-7 sm:gap-8"
               >
                 <div className="space-y-6">
                   <div className="space-y-2">
-                    <div className="flex items-center justify-between gap-4 text-xs font-semibold text-principal/55">
+                    <div className="flex items-start justify-between gap-3 text-xs font-semibold text-principal/55">
                       <span>{cls.capacity}</span>
-                      <Home className="w-4 h-4 text-secundaria shrink-0" />
+                      <Home className="w-4 h-4 text-secundaria shrink-0 mt-0.5" />
                     </div>
                     <h3 className="text-2xl sm:text-3xl font-serif font-bold text-principal">{cls.title}</h3>
                     <p className="text-sm text-texto-main/70 font-light leading-relaxed">
@@ -295,12 +295,12 @@ export default function BungalowsPage() {
                 <h3 className="text-2xl font-serif text-principal font-bold">Horários e Logística</h3>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 min-[360px]:grid-cols-2 gap-3 sm:gap-4">
                 <div className="p-4 rounded-2xl bg-branco-quente">
                   <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-principal/50 mb-1">
                     Check-in
                   </p>
-                  <p className="text-base font-serif font-bold text-principal tabular-nums">
+                  <p className="text-sm sm:text-base font-serif font-bold text-principal tabular-nums">
                     17h00 às 20h30
                   </p>
                 </div>
@@ -325,10 +325,10 @@ export default function BungalowsPage() {
         </motion.section>
 
         {/* General Conditions + Testimonial */}
-        <motion.section {...fadeInUp} className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
-          <div className="lg:col-span-6 bg-white p-8 md:p-10 rounded-[2rem] border border-principal/10 space-y-5">
+        <motion.section {...fadeInUp} className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 items-stretch">
+          <div className="lg:col-span-6 bg-white p-6 sm:p-8 md:p-10 rounded-3xl md:rounded-[2rem] border border-principal/10 space-y-5">
             <div className="flex items-center gap-3">
-              <Info className="w-5 h-5 text-secundaria" />
+              <Info className="w-5 h-5 text-secundaria shrink-0" />
               <h3 className="text-2xl font-serif text-principal font-bold">Condições Gerais</h3>
             </div>
             <ul className="space-y-3 text-sm text-texto-main/75 font-light leading-relaxed">
@@ -341,13 +341,13 @@ export default function BungalowsPage() {
             </ul>
           </div>
 
-          <div className="lg:col-span-6 bg-white p-8 md:p-10 rounded-[2rem] border border-principal/10 flex flex-col justify-between gap-6">
-            <p className="text-lg md:text-xl font-serif text-principal italic leading-relaxed">
+          <div className="lg:col-span-6 bg-white p-6 sm:p-8 md:p-10 rounded-3xl md:rounded-[2rem] border border-principal/10 flex flex-col justify-between gap-6">
+            <p className="text-base sm:text-lg md:text-xl font-serif text-principal italic leading-relaxed">
               “Acabamos de chegar a casa hoje depois de passar férias por uma semana em um dos
               bungalows. Estava extremamente limpo e tinha todas as comodidades necessárias para uma
               semana confortável. Há uma adorável piscina e os duches eram impecáveis.”
             </p>
-            <div className="pt-4 border-t border-principal/10 flex items-center justify-between text-xs text-texto-main/60">
+            <div className="pt-4 border-t border-principal/10 flex flex-col sm:flex-row sm:items-center gap-1 sm:justify-between text-xs text-texto-main/60">
               <span className="font-bold uppercase tracking-widest text-principal">Helen</span>
               <span>St Neots, Reino Unido · Estadia de 1 semana</span>
             </div>

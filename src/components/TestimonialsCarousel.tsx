@@ -71,7 +71,7 @@ export default function TestimonialsCarousel() {
   const scroll = (direction: 'left' | 'right') => {
     const el = scrollRef.current;
     if (el) {
-      const scrollAmount = el.offsetWidth > 600 ? 450 : 350;
+      const scrollAmount = el.offsetWidth > 600 ? 450 : Math.max(260, el.offsetWidth * 0.85);
       el.scrollTo({
         left: direction === 'left' ? el.scrollLeft - scrollAmount : el.scrollLeft + scrollAmount,
         behavior: 'smooth'
@@ -92,7 +92,7 @@ export default function TestimonialsCarousel() {
             <div className="inline-block px-4 py-1 bg-secundaria/10 rounded-full text-principal text-[10px] font-bold uppercase tracking-[0.2em] mb-4">
               Feedback dos Hóspedes
             </div>
-            <h2 className="text-3xl sm:text-4xl md:text-5xl font-serif text-principal leading-tight">O QUE DIZEM <br/><span className="text-secundaria italic">OS NOSSOS HÓSPEDES</span></h2>
+            <h2 className="text-2xl sm:text-4xl md:text-5xl font-serif text-principal leading-tight">O QUE DIZEM <br/><span className="text-secundaria italic">OS NOSSOS HÓSPEDES</span></h2>
           </div>
           <div className="flex gap-3 mt-6 md:mt-0">
             <button 
@@ -122,7 +122,7 @@ export default function TestimonialsCarousel() {
             <motion.div 
               key={i} 
               whileHover={{ y: -10 }}
-              className="bg-white p-7 sm:p-10 rounded-3xl sm:rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.03)] border border-gray-50 flex flex-col justify-between min-w-[275px] sm:min-w-[360px] md:min-w-[420px] max-w-[85vw] sm:max-w-[440px] shrink-0 transition-all duration-500 hover:shadow-[0_40px_80px_rgba(0,0,0,0.06)] snap-start"
+              className="bg-white p-6 sm:p-10 rounded-3xl sm:rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.03)] border border-gray-50 flex flex-col justify-between w-[82vw] sm:w-[380px] md:w-[420px] shrink-0 transition-all duration-500 hover:shadow-[0_40px_80px_rgba(0,0,0,0.06)] snap-start"
             >
               <div className="relative">
                 <Quote className="absolute -top-3 -left-3 sm:-top-4 sm:-left-4 w-10 h-10 sm:w-12 sm:h-12 text-secundaria/10" />
@@ -133,19 +133,19 @@ export default function TestimonialsCarousel() {
                     </svg>
                   ))}
                 </div>
-                <p className="text-texto-main/80 text-base sm:text-lg leading-relaxed font-light mb-6 sm:mb-8 relative z-10">"{test.text}"</p>
+                <p className="text-texto-main/80 text-sm sm:text-lg leading-relaxed font-light mb-6 sm:mb-8 relative z-10">"{test.text}"</p>
               </div>
-              <div className="pt-8 border-t border-gray-50 flex justify-between items-center">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 bg-principal/5 rounded-full flex items-center justify-center font-serif font-bold text-principal text-xl uppercase">
+              <div className="pt-5 sm:pt-8 border-t border-gray-50 flex flex-wrap justify-between items-center gap-3">
+                <div className="flex items-center gap-3 sm:gap-4 min-w-0">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-principal/5 rounded-full flex items-center justify-center font-serif font-bold text-principal text-lg sm:text-xl uppercase shrink-0">
                     {test.name.charAt(0)}
                   </div>
-                  <div>
-                    <h4 className="font-serif font-bold text-principal text-lg">{test.name}</h4>
-                    <p className="text-[10px] uppercase tracking-widest text-texto-main/40 font-bold">{test.role}</p>
+                  <div className="min-w-0">
+                    <h4 className="font-serif font-bold text-principal text-base sm:text-lg truncate">{test.name}</h4>
+                    <p className="text-[10px] uppercase tracking-widest text-texto-main/40 font-bold truncate">{test.role}</p>
                   </div>
                 </div>
-                <span className="text-[9px] px-3 py-1 bg-branco-quente rounded-full text-texto-main/60 font-black uppercase tracking-widest">{test.source}</span>
+                <span className="text-[9px] px-3 py-1 bg-branco-quente rounded-full text-texto-main/60 font-black uppercase tracking-widest shrink-0">{test.source}</span>
               </div>
             </motion.div>
           ))}

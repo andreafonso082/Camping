@@ -476,7 +476,7 @@ export default function BookingPage() {
                         </div>
 
                         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
-                          <div>
+                          <div className="min-w-0">
                             <label className="text-[9px] font-black uppercase tracking-widest text-principal/40 ml-1 block mb-1.5">
                               Check-in
                             </label>
@@ -487,12 +487,12 @@ export default function BookingPage() {
                                 value={checkIn}
                                 min={new Date().toISOString().slice(0, 10)}
                                 onChange={(e) => setCheckIn(e.target.value)}
-                                className="w-full min-h-[46px] bg-white border border-gray-200 rounded-xl py-2.5 pl-10 pr-3 text-base md:text-xs font-bold text-principal focus:outline-none focus:border-secundaria"
+                                className="w-full min-w-0 min-h-[46px] bg-white border border-gray-200 rounded-xl py-2.5 pl-10 pr-3 text-base md:text-xs font-bold text-principal focus:outline-none focus:border-secundaria"
                               />
                             </div>
                           </div>
 
-                          <div>
+                          <div className="min-w-0">
                             <label className="text-[9px] font-black uppercase tracking-widest text-principal/40 ml-1 block mb-1.5">
                               Check-out
                             </label>
@@ -503,12 +503,12 @@ export default function BookingPage() {
                                 value={checkOut}
                                 min={checkIn}
                                 onChange={(e) => setCheckOut(e.target.value)}
-                                className="w-full min-h-[46px] bg-white border border-gray-200 rounded-xl py-2.5 pl-10 pr-3 text-base md:text-xs font-bold text-principal focus:outline-none focus:border-secundaria"
+                                className="w-full min-w-0 min-h-[46px] bg-white border border-gray-200 rounded-xl py-2.5 pl-10 pr-3 text-base md:text-xs font-bold text-principal focus:outline-none focus:border-secundaria"
                               />
                             </div>
                           </div>
 
-                          <div>
+                          <div className="min-w-0">
                             <label className="text-[9px] font-black uppercase tracking-widest text-principal/40 ml-1 block mb-1.5">
                               Adultos
                             </label>
@@ -517,7 +517,7 @@ export default function BookingPage() {
                               <select
                                 value={adults}
                                 onChange={(e) => setAdults(parseInt(e.target.value, 10))}
-                                className="w-full min-h-[46px] bg-white border border-gray-200 rounded-xl py-2.5 pl-10 pr-3 text-base md:text-xs font-bold text-principal focus:outline-none focus:border-secundaria cursor-pointer"
+                                className="w-full min-w-0 min-h-[46px] bg-white border border-gray-200 rounded-xl py-2.5 pl-10 pr-3 text-base md:text-xs font-bold text-principal focus:outline-none focus:border-secundaria cursor-pointer"
                               >
                                 {[1, 2, 3, 4, 5, 6, 7, 8].map((n) => (
                                   <option key={n} value={n}>
@@ -528,7 +528,7 @@ export default function BookingPage() {
                             </div>
                           </div>
 
-                          <div>
+                          <div className="min-w-0">
                             <label className="text-[9px] font-black uppercase tracking-widest text-principal/40 ml-1 block mb-1.5">
                               Crianças
                             </label>
@@ -537,7 +537,7 @@ export default function BookingPage() {
                               <select
                                 value={children}
                                 onChange={(e) => setChildren(parseInt(e.target.value, 10))}
-                                className="w-full min-h-[46px] bg-white border border-gray-200 rounded-xl py-2.5 pl-10 pr-3 text-base md:text-xs font-bold text-principal focus:outline-none focus:border-secundaria cursor-pointer"
+                                className="w-full min-w-0 min-h-[46px] bg-white border border-gray-200 rounded-xl py-2.5 pl-10 pr-3 text-base md:text-xs font-bold text-principal focus:outline-none focus:border-secundaria cursor-pointer"
                               >
                                 {[0, 1, 2, 3, 4, 5].map((n) => (
                                   <option key={n} value={n}>
@@ -591,7 +591,7 @@ export default function BookingPage() {
                           <h2 className="text-base sm:text-lg font-serif font-bold text-principal">
                             2. Disponibilidade em Tempo Real
                           </h2>
-                          <div className="flex flex-wrap sm:inline-flex w-full sm:w-auto gap-1.5 bg-branco-quente p-1.5 rounded-2xl border border-gray-100">
+                          <div className="grid grid-cols-2 sm:inline-flex w-full sm:w-auto gap-1.5 bg-branco-quente p-1.5 rounded-2xl border border-gray-100">
                             {[
                               {
                                 id: 'alveolos',
@@ -616,13 +616,13 @@ export default function BookingPage() {
                                     handleSelectOption('bungalows', 'A');
                                   }
                                 }}
-                                className={`flex-1 sm:flex-initial justify-center min-h-[44px] px-3 sm:px-4 py-2 rounded-xl text-[11px] font-black uppercase tracking-wider transition-all flex items-center gap-2 cursor-pointer ${
+                                className={`last:col-span-2 sm:last:col-span-1 justify-center min-h-[44px] px-3 sm:px-4 py-2 rounded-xl text-[11px] font-black uppercase tracking-wider transition-all flex items-center gap-2 cursor-pointer ${
                                   selectedTab === tab.id
                                     ? 'bg-principal text-white shadow'
                                     : 'text-principal/60 hover:text-principal'
                                 }`}
                               >
-                                <span className="truncate">{tab.label}</span>
+                                <span>{tab.label}</span>
                                 {tab.count !== null && tab.count !== undefined && (
                                   <span
                                     className={`px-2 py-0.5 rounded-full text-[9px] shrink-0 ${
@@ -644,13 +644,13 @@ export default function BookingPage() {
                             A verificar disponibilidade em tempo real...
                           </div>
                         ) : selectedTab === 'outros' ? (
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div className="p-8 rounded-3xl border border-amber-200 bg-amber-50/50 space-y-4">
-                              <div className="flex items-center justify-between">
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+                            <div className="p-5 sm:p-8 rounded-3xl border border-amber-200 bg-amber-50/50 space-y-4">
+                              <div className="flex flex-wrap items-center justify-between gap-2">
                                 <h3 className="font-serif text-xl font-bold text-principal">
                                   Mobile Homes
                                 </h3>
-                                <span className="text-[9px] font-black uppercase tracking-widest bg-amber-200/60 text-amber-900 px-3 py-1 rounded-full">
+                                <span className="text-[9px] font-black uppercase tracking-widest bg-amber-200/60 text-amber-900 px-3 py-1 rounded-full shrink-0">
                                   Não Reservável
                                 </span>
                               </div>
@@ -667,12 +667,12 @@ export default function BookingPage() {
                               </Link>
                             </div>
 
-                            <div className="p-8 rounded-3xl border border-blue-200 bg-blue-50/50 space-y-4">
-                              <div className="flex items-center justify-between">
+                            <div className="p-5 sm:p-8 rounded-3xl border border-blue-200 bg-blue-50/50 space-y-4">
+                              <div className="flex flex-wrap items-center justify-between gap-2">
                                 <h3 className="font-serif text-xl font-bold text-principal">
                                   Kampaoh
                                 </h3>
-                                <span className="text-[9px] font-black uppercase tracking-widest bg-blue-200/60 text-blue-900 px-3 py-1 rounded-full">
+                                <span className="text-[9px] font-black uppercase tracking-widest bg-blue-200/60 text-blue-900 px-3 py-1 rounded-full shrink-0">
                                   Empresa Externa
                                 </span>
                               </div>
@@ -685,9 +685,9 @@ export default function BookingPage() {
                                 href="https://booking.kampaoh.com/property/141?lang=pt&checkin=2026-11-17&checkout=2026-11-19&adults=2&children=0&babies=0&fpa=none"
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="inline-flex items-center gap-2 bg-blue-600 text-white px-5 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-blue-700 transition-colors"
+                                className="inline-flex items-center justify-center gap-2 bg-blue-600 text-white min-h-[44px] px-5 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-blue-700 transition-colors"
                               >
-                                Reservar na Kampaoh <ExternalLink className="w-3.5 h-3.5" />
+                                Reservar na Kampaoh <ExternalLink className="w-3.5 h-3.5 shrink-0" />
                               </a>
                             </div>
                           </div>
@@ -710,7 +710,7 @@ export default function BookingPage() {
                                     type="button"
                                     disabled={!cat.eligible}
                                     onClick={() => handleSelectOption(selectedTab, cat.key)}
-                                    className={`w-full p-6 rounded-3xl border-2 text-left transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-6 ${
+                                    className={`w-full p-4 sm:p-6 rounded-2xl sm:rounded-3xl border-2 text-left transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-4 sm:gap-6 ${
                                       isSelected
                                         ? 'border-secundaria bg-secundaria/5 shadow-lg'
                                         : cat.eligible
@@ -718,9 +718,9 @@ export default function BookingPage() {
                                           : 'border-gray-100 bg-gray-50/70 opacity-60 cursor-not-allowed'
                                     }`}
                                   >
-                                    <div className="space-y-2 flex-grow">
-                                      <div className="flex flex-wrap items-center gap-3">
-                                        <span className="font-serif text-xl font-bold text-principal">
+                                    <div className="space-y-1.5 sm:space-y-2 flex-grow">
+                                      <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+                                        <span className="font-serif text-lg sm:text-xl font-bold text-principal">
                                           {cat.label}
                                         </span>
                                         {cat.eligible ? (
@@ -739,16 +739,18 @@ export default function BookingPage() {
                                       </p>
                                     </div>
 
-                                    <div className="sm:text-right shrink-0">
+                                    <div className="w-full sm:w-auto flex items-baseline justify-between sm:block sm:text-right pt-3 sm:pt-0 border-t sm:border-t-0 border-principal/10 shrink-0">
                                       <p className="text-[10px] font-bold uppercase tracking-widest text-principal/40">
                                         {cat.pricePerNight.toFixed(2)}€ / noite
                                       </p>
-                                      <p className="text-2xl font-serif font-bold text-principal">
-                                        {cat.estimatedTotal.toFixed(2)}€
-                                      </p>
-                                      <p className="text-[10px] text-texto-main/40">
-                                        Total ({cat.nights} {cat.nights === 1 ? 'noite' : 'noites'})
-                                      </p>
+                                      <div className="text-right">
+                                        <p className="text-xl sm:text-2xl font-serif font-bold text-principal tabular-nums">
+                                          {cat.estimatedTotal.toFixed(2)}€
+                                        </p>
+                                        <p className="text-[10px] text-texto-main/40">
+                                          Total ({cat.nights} {cat.nights === 1 ? 'noite' : 'noites'})
+                                        </p>
+                                      </div>
                                     </div>
                                   </button>
                                 );
@@ -986,12 +988,12 @@ export default function BookingPage() {
                           </div>
                         </div>
 
-                        <div className="flex justify-between items-center bg-principal p-5 sm:p-7 rounded-2xl text-white shadow-xl">
-                          <div>
-                            <p className="text-[10px] font-black uppercase tracking-[0.2em] sm:tracking-[0.3em] text-secundaria">
+                        <div className="flex justify-between items-center gap-3 bg-principal p-4 sm:p-7 rounded-2xl text-white shadow-xl">
+                          <div className="min-w-0">
+                            <p className="text-[10px] font-black uppercase tracking-[0.12em] sm:tracking-[0.25em] text-secundaria">
                               Valor Total (Pagamento no Check-in)
                             </p>
-                            <p className="text-2xl sm:text-3xl font-serif font-bold">
+                            <p className="text-2xl sm:text-3xl font-serif font-bold tabular-nums">
                               {selectedCategory.estimatedTotal.toFixed(2)}€
                             </p>
                           </div>
@@ -1017,7 +1019,7 @@ export default function BookingPage() {
                         <button
                           type="submit"
                           disabled={isSubmitting}
-                          className="flex-grow min-h-[50px] bg-secundaria text-principal py-4 px-6 rounded-full font-black uppercase tracking-widest text-xs hover:bg-principal hover:text-white transition-all flex items-center justify-center gap-3 shadow-2xl cursor-pointer"
+                          className="flex-grow min-h-[50px] bg-secundaria text-principal py-4 px-5 rounded-full font-black uppercase tracking-wider sm:tracking-widest text-[11px] sm:text-xs hover:bg-principal hover:text-white transition-all flex items-center justify-center gap-2.5 sm:gap-3 shadow-2xl text-center cursor-pointer"
                         >
                           {isSubmitting ? (
                             <motion.div
@@ -1027,7 +1029,7 @@ export default function BookingPage() {
                             />
                           ) : (
                             <>
-                              Confirmar e Reservar Automaticamente
+                              <span>Confirmar e Reservar Automaticamente</span>
                               <CheckCircle2 className="w-4 h-4 shrink-0" />
                             </>
                           )}

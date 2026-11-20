@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
+import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   LayoutDashboard,
@@ -26,7 +27,13 @@ import {
   Globe,
   Building2,
 } from 'lucide-react';
-import type { AccommodationType, Booking, BookingStatus, ResourceUnit } from '../types/booking.ts';
+import type {
+  AccommodationType,
+  AvailabilityResponse,
+  Booking,
+  BookingStatus,
+  ResourceUnit,
+} from '../types/booking.ts';
 import {
   adminLogin,
   checkAvailability,
@@ -45,6 +52,12 @@ const STATUS_LABELS: Record<BookingStatus, { label: string; badge: string }> = {
   'checked-out': { label: 'Concluída', badge: 'bg-gray-100 text-gray-600' },
   cancelled: { label: 'Cancelada', badge: 'bg-red-100 text-red-700' },
 };
+
+function formatDatePT(dateStr: string): string {
+  if (!dateStr || !dateStr.includes('-')) return dateStr;
+  const [y, m, d] = dateStr.split('-');
+  return `${d}/${m}/${y}`;
+}
 
 export default function AdminPage() {
   const [token, setToken] = useState<string>(() => localStorage.getItem('crf_admin_token') || '');
@@ -76,7 +89,7 @@ export default function AdminPage() {
   const [newEmail, setNewEmail] = useState('');
   const [newPhone, setNewPhone] = useState('');
   const [newType, setNewType] = useState<AccommodationType>('alveolos');
-  const [newSubtypeKey, setNewSubtypeKey] = useState('grande');
+  const [newSubtypeKey, setNewSubtypeKey] = useState('all');
   const [newCheckIn, setNewCheckIn] = useState(() => new Date().toISOString().slice(0, 10));
   const [newCheckOut, setNewCheckOut] = useState(() => {
     const d = new Date();
@@ -86,7 +99,10 @@ export default function AdminPage() {
   const [newAdults, setNewAdults] = useState(2);
   const [newChildren, setNewChildren] = useState(0);
   const [newPreferredUnit, setNewPreferredUnit] = useState('');
-  const [newAvailIds, setNewAvailIds] = useState<string[]>([]);
+  const [newUnitSearch, setNewUnitSearch] = useState('');
+  const [newAvailability, setNewAvailability] = useState<AvailabilityResponse | null>(null);
+  const [loadingNewAvail, setLoadingNewAvail] = useState(false);
+  const [unitInvalidNotice, setUnitInvalidNotice] = useState('');
   const [newBookingError, setNewBookingError] = useState('');
   const [creatingBooking, setCreatingBooking] = useState(false);
 
@@ -133,9 +149,11 @@ export default function AdminPage() {
   // Live availability inside Manual Booking Modal
   useEffect(() => {
     if (!showNewModal || !newCheckIn || !newCheckOut || newCheckOut <= newCheckIn) {
-      setNewAvailIds([]);
+      setNewAvailability(null);
       return;
     }
+    let cancelled = false;
+    setLoadingNewAvail(true);
     checkAvailability({
       checkIn: newCheckIn,
       checkOut: newCheckOut,
@@ -143,18 +161,146 @@ export default function AdminPage() {
       children: newChildren,
     })
       .then((res) => {
-        if (newType === 'alveolos') {
-          if (newSubtypeKey === 'pequeno') setNewAvailIds(res.alveolos.pequeno.availableIds);
-          else if (newSubtypeKey === 'xl') setNewAvailIds(res.alveolos.xl.availableIds);
-          else setNewAvailIds(res.alveolos.grande.availableIds);
-        } else {
-          setNewAvailIds(
-            newSubtypeKey === 'A' ? res.bungalows.classeA.availableIds : res.bungalows.classeB.availableIds
-          );
-        }
+        if (cancelled) return;
+        setNewAvailability(res);
       })
-      .catch(() => setNewAvailIds([]));
-  }, [showNewModal, newCheckIn, newCheckOut, newAdults, newChildren, newType, newSubtypeKey]);
+      .catch(() => {
+        if (!cancelled) setNewAvailability(null);
+      })
+      .finally(() => {
+        if (!cancelled) setLoadingNewAvail(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [showNewModal, newCheckIn, newCheckOut, newAdults, newChildren]);
+
+  const manualBookingAvailability = useMemo(() => {
+    const resourceById = new Map(resources.map((r) => [r.id, r]));
+    if (!newAvailability) {
+      return {
+        allIdsForType: [] as string[],
+        filteredIds: [] as string[],
+        matchingUnits: [] as ResourceUnit[],
+        availableSetForType: new Set<string>(),
+      };
+    }
+
+    const sortIds = (ids: string[]) =>
+      [...ids].sort((a, b) => {
+        const na = parseInt(a.replace(/\D/g, ''), 10) || 0;
+        const nb = parseInt(b.replace(/\D/g, ''), 10) || 0;
+        return na - nb;
+      });
+
+    const allIdsForType =
+      newType === 'alveolos'
+        ? sortIds([
+            ...newAvailability.alveolos.pequeno.availableIds,
+            ...newAvailability.alveolos.grande.availableIds,
+            ...newAvailability.alveolos.xl.availableIds,
+          ])
+        : sortIds([
+            ...newAvailability.bungalows.classeA.availableIds,
+            ...newAvailability.bungalows.classeB.availableIds,
+          ]);
+
+    const availableSetForType = new Set(allIdsForType);
+
+    let filteredIds = allIdsForType;
+    if (newType === 'alveolos') {
+      if (newSubtypeKey === 'pequeno') filteredIds = sortIds(newAvailability.alveolos.pequeno.availableIds);
+      else if (newSubtypeKey === 'grande') filteredIds = sortIds(newAvailability.alveolos.grande.availableIds);
+      else if (newSubtypeKey === 'xl') filteredIds = sortIds(newAvailability.alveolos.xl.availableIds);
+    } else {
+      if (newSubtypeKey === 'A') filteredIds = sortIds(newAvailability.bungalows.classeA.availableIds);
+      else if (newSubtypeKey === 'B') filteredIds = sortIds(newAvailability.bungalows.classeB.availableIds);
+    }
+
+    const q = newUnitSearch.trim().toLowerCase();
+    const matchingUnits = filteredIds
+      .map((id) => resourceById.get(id))
+      .filter((u): u is ResourceUnit => !!u)
+      .filter((u) => {
+        if (!q) return true;
+        return (
+          u.id.toLowerCase().includes(q) ||
+          u.name.toLowerCase().includes(q) ||
+          String(u.number).includes(q) ||
+          (u.sector || '').toLowerCase().includes(q) ||
+          (u.size || '').toLowerCase().includes(q) ||
+          (u.street ? `rua ${u.street}` : '').includes(q)
+        );
+      });
+
+    return { allIdsForType, filteredIds, matchingUnits, availableSetForType };
+  }, [newAvailability, newType, newSubtypeKey, newUnitSearch, resources]);
+
+  // Keep selected preferred unit valid when dates/type/category change
+  useEffect(() => {
+    if (!showNewModal || !newAvailability || !newPreferredUnit) {
+      setUnitInvalidNotice('');
+      return;
+    }
+    const validIds = new Set(manualBookingAvailability.filteredIds);
+    if (!validIds.has(newPreferredUnit)) {
+      const stillFreeInType = manualBookingAvailability.availableSetForType.has(newPreferredUnit);
+      if (!stillFreeInType) {
+        setUnitInvalidNotice(
+          `A unidade ${newPreferredUnit} não está disponível para as datas selecionadas. Selecione outra unidade.`
+        );
+      } else {
+        setUnitInvalidNotice('');
+      }
+      setNewPreferredUnit('');
+    } else {
+      setUnitInvalidNotice('');
+    }
+  }, [showNewModal, newAvailability, newPreferredUnit, manualBookingAvailability]);
+
+  const selectedPreferredUnitObj = useMemo(
+    () => resources.find((r) => r.id === newPreferredUnit) || null,
+    [resources, newPreferredUnit]
+  );
+
+  const resolvedManualSubtypeKey = useMemo(() => {
+    if (selectedPreferredUnitObj && selectedPreferredUnitObj.type === newType) {
+      return newType === 'alveolos'
+        ? selectedPreferredUnitObj.size || 'grande'
+        : selectedPreferredUnitObj.bungalowClass || 'A';
+    }
+    if (newType === 'alveolos') {
+      if (newSubtypeKey === 'pequeno' || newSubtypeKey === 'grande' || newSubtypeKey === 'xl') {
+        return newSubtypeKey;
+      }
+      if (newAvailability) {
+        if (newAvailability.alveolos.grande.eligible) return 'grande';
+        if (newAvailability.alveolos.pequeno.eligible) return 'pequeno';
+        if (newAvailability.alveolos.xl.eligible) return 'xl';
+      }
+      return 'grande';
+    }
+    if (newSubtypeKey === 'A' || newSubtypeKey === 'B') {
+      return newSubtypeKey;
+    }
+    if (newAvailability) {
+      if (newAvailability.bungalows.classeA.eligible) return 'A';
+      if (newAvailability.bungalows.classeB.eligible) return 'B';
+    }
+    return 'A';
+  }, [selectedPreferredUnitObj, newType, newSubtypeKey, newAvailability]);
+
+  const selectedManualSummary = useMemo(() => {
+    if (!newAvailability) return null;
+    if (newType === 'alveolos') {
+      if (resolvedManualSubtypeKey === 'pequeno') return newAvailability.alveolos.pequeno;
+      if (resolvedManualSubtypeKey === 'xl') return newAvailability.alveolos.xl;
+      return newAvailability.alveolos.grande;
+    }
+    return resolvedManualSubtypeKey === 'A'
+      ? newAvailability.bungalows.classeA
+      : newAvailability.bungalows.classeB;
+  }, [newAvailability, newType, resolvedManualSubtypeKey]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -211,7 +357,7 @@ export default function AdminPage() {
           email: newEmail,
           phone: newPhone,
           type: newType,
-          subtypeKey: newSubtypeKey,
+          subtypeKey: resolvedManualSubtypeKey,
           preferredResourceId: newPreferredUnit || undefined,
           checkIn: newCheckIn,
           checkOut: newCheckOut,
@@ -227,6 +373,8 @@ export default function AdminPage() {
       setNewEmail('');
       setNewPhone('');
       setNewPreferredUnit('');
+      setNewUnitSearch('');
+      setUnitInvalidNotice('');
       await loadData();
     } catch (err) {
       setNewBookingError(err instanceof Error ? err.message : 'Erro ao criar reserva.');
@@ -298,7 +446,7 @@ export default function AdminPage() {
   // Auth Screen
   if (!token) {
     return (
-      <div className="min-h-screen bg-branco-quente flex items-center justify-center px-6 pt-28 pb-16">
+      <div className="min-h-screen bg-branco-quente flex items-center justify-center px-6 py-12">
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -353,6 +501,15 @@ export default function AdminPage() {
               {loggingIn ? 'A entrar...' : 'Entrar no Backoffice'}
             </button>
           </form>
+          <div className="mt-8 pt-6 border-t border-gray-100 text-center">
+            <Link
+              to="/"
+              className="inline-flex items-center gap-2 text-[11px] font-bold uppercase tracking-widest text-principal/45 hover:text-principal transition-colors"
+            >
+              <Globe className="w-3.5 h-3.5" />
+              Voltar ao site público
+            </Link>
+          </div>
         </motion.div>
       </div>
     );
@@ -362,7 +519,7 @@ export default function AdminPage() {
   const bungalowResources = resources.filter((r) => r.type === 'bungalows');
 
   return (
-    <div className="min-h-screen bg-branco-quente flex flex-col lg:flex-row pt-16 md:pt-20 lg:pt-28">
+    <div className="min-h-screen bg-branco-quente flex flex-col lg:flex-row">
       {/* Mobile & Tablet Top Tab Bar */}
       <div className="lg:hidden bg-principal text-white px-4 py-3 space-y-3 shadow-lg">
         <div className="flex items-center justify-between gap-3">
@@ -372,12 +529,20 @@ export default function AdminPage() {
             </p>
             <p className="text-sm font-serif font-bold">Gestão de Reservas</p>
           </div>
-          <button
-            onClick={handleLogout}
-            className="min-h-[40px] px-3 rounded-xl bg-white/10 hover:bg-red-500/20 text-white/80 hover:text-red-300 flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest shrink-0"
-          >
-            <LogOut className="w-3.5 h-3.5" /> Sair
-          </button>
+          <div className="flex items-center gap-2 shrink-0">
+            <Link
+              to="/"
+              className="min-h-[40px] px-3 rounded-xl bg-white/10 hover:bg-white/20 text-white/80 hover:text-white flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest"
+            >
+              <Globe className="w-3.5 h-3.5" /> Site
+            </Link>
+            <button
+              onClick={handleLogout}
+              className="min-h-[40px] px-3 rounded-xl bg-white/10 hover:bg-red-500/20 text-white/80 hover:text-red-300 flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest"
+            >
+              <LogOut className="w-3.5 h-3.5" /> Sair
+            </button>
+          </div>
         </div>
 
         <nav className="flex gap-2 overflow-x-auto scrollbar-none pb-1">
@@ -404,8 +569,13 @@ export default function AdminPage() {
       </div>
 
       {/* Desktop Sidebar */}
-      <aside className="hidden lg:flex w-64 xl:w-72 bg-principal text-white flex-col py-8 sticky top-28 h-[calc(100vh-7rem)] shadow-2xl shrink-0">
+      <aside className="hidden lg:flex w-64 xl:w-72 bg-principal text-white flex-col py-8 sticky top-0 h-screen shadow-2xl shrink-0">
         <div className="px-8 mb-10">
+          <img
+            src="/assets/logo-camping.png"
+            alt="Camping Ria Formosa"
+            className="h-11 w-auto object-contain brightness-0 invert mb-5 opacity-95"
+          />
           <p className="text-[9px] font-black uppercase tracking-[0.3em] text-secundaria">
             Backoffice Conectado
           </p>
@@ -451,6 +621,12 @@ export default function AdminPage() {
           <div className="flex items-center gap-2 text-[10px] text-green-400 font-bold uppercase tracking-widest">
             Sincronizado com o Site
           </div>
+          <Link
+            to="/"
+            className="flex items-center gap-3 text-white/60 hover:text-secundaria transition-colors text-xs font-bold uppercase tracking-widest"
+          >
+            <Globe className="w-4 h-4" /> Ver Site Público
+          </Link>
           <button
             onClick={handleLogout}
             className="flex items-center gap-3 text-white/50 hover:text-red-400 transition-colors text-xs font-bold uppercase tracking-widest"
@@ -462,12 +638,12 @@ export default function AdminPage() {
 
       {/* Main Content */}
       <main className="flex-grow p-4 sm:p-6 md:p-10 overflow-y-auto">
-        <header className="flex flex-wrap justify-between items-center gap-4 mb-8">
+        <header className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6 sm:mb-8">
           <div>
-            <p className="text-[10px] font-black uppercase tracking-[0.35em] text-secundaria">
+            <p className="text-[10px] font-black uppercase tracking-[0.3em] sm:tracking-[0.35em] text-secundaria">
               Camping Ria Formosa • Receção
             </p>
-            <h1 className="text-3xl font-serif text-principal font-bold">
+            <h1 className="text-2xl sm:text-3xl font-serif text-principal font-bold">
               {activeTab === 'dashboard' && 'Visão Geral'}
               {activeTab === 'bookings' && 'Todas as Reservas'}
               {activeTab === 'map' && 'Planta dos 350 Alvéolos'}
@@ -475,19 +651,19 @@ export default function AdminPage() {
             </h1>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="w-full sm:w-auto flex items-center gap-2 sm:gap-3">
             <button
               onClick={loadData}
-              className="bg-white px-4 py-3 rounded-2xl shadow-sm border border-gray-100 text-principal/60 hover:text-principal flex items-center gap-2 text-[10px] font-black uppercase tracking-widest"
+              className="flex-1 sm:flex-initial justify-center min-h-[44px] bg-white px-4 py-2.5 rounded-2xl shadow-sm border border-gray-100 text-principal/60 hover:text-principal flex items-center gap-2 text-[10px] font-black uppercase tracking-widest cursor-pointer"
             >
-              <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+              <RefreshCw className={`w-4 h-4 shrink-0 ${loading ? 'animate-spin' : ''}`} />
               Atualizar
             </button>
             <button
               onClick={() => setShowNewModal(true)}
-              className="bg-principal text-white px-5 py-3 rounded-2xl font-bold uppercase tracking-widest text-[10px] hover:bg-secundaria hover:text-principal transition-all flex items-center gap-2 shadow-lg"
+              className="flex-1 sm:flex-initial justify-center min-h-[44px] bg-principal text-white px-5 py-2.5 rounded-2xl font-bold uppercase tracking-widest text-[10px] hover:bg-secundaria hover:text-principal transition-all flex items-center gap-2 shadow-lg cursor-pointer"
             >
-              <Plus className="w-4 h-4" /> Nova Reserva
+              <Plus className="w-4 h-4 shrink-0" /> Nova Reserva
             </button>
           </div>
         </header>
@@ -514,15 +690,15 @@ export default function AdminPage() {
               exit={{ opacity: 0, y: -10 }}
               className="space-y-8"
             >
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                <div className="bg-white p-7 rounded-3xl shadow-sm border border-gray-100">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+                <div className="bg-white p-5 sm:p-7 rounded-3xl shadow-sm border border-gray-100">
                   <div className="flex justify-between items-start mb-4">
                     <div className="p-3 rounded-2xl bg-green-50 text-green-600">
                       <MapIcon className="w-5 h-5" />
                     </div>
                     <span className="text-[9px] font-black uppercase text-green-600">Hoje</span>
                   </div>
-                  <p className="text-3xl font-serif font-bold text-principal">
+                  <p className="text-2xl sm:text-3xl font-serif font-bold text-principal">
                     {stats.freeAlveolos} / {stats.totalAlveolos}
                   </p>
                   <p className="text-[10px] font-black uppercase tracking-widest text-principal/40 mt-1">
@@ -530,14 +706,14 @@ export default function AdminPage() {
                   </p>
                 </div>
 
-                <div className="bg-white p-7 rounded-3xl shadow-sm border border-gray-100">
+                <div className="bg-white p-5 sm:p-7 rounded-3xl shadow-sm border border-gray-100">
                   <div className="flex justify-between items-start mb-4">
                     <div className="p-3 rounded-2xl bg-blue-50 text-blue-600">
                       <Home className="w-5 h-5" />
                     </div>
                     <span className="text-[9px] font-black uppercase text-blue-600">Hoje</span>
                   </div>
-                  <p className="text-3xl font-serif font-bold text-principal">
+                  <p className="text-2xl sm:text-3xl font-serif font-bold text-principal">
                     {stats.freeBungalows} / {stats.totalBungalows}
                   </p>
                   <p className="text-[10px] font-black uppercase tracking-widest text-principal/40 mt-1">
@@ -545,14 +721,14 @@ export default function AdminPage() {
                   </p>
                 </div>
 
-                <div className="bg-white p-7 rounded-3xl shadow-sm border border-gray-100">
+                <div className="bg-white p-5 sm:p-7 rounded-3xl shadow-sm border border-gray-100">
                   <div className="flex justify-between items-start mb-4">
                     <div className="p-3 rounded-2xl bg-amber-50 text-amber-600">
                       <Users className="w-5 h-5" />
                     </div>
                     <span className="text-[9px] font-black uppercase text-amber-600">Ativas</span>
                   </div>
-                  <p className="text-3xl font-serif font-bold text-principal">
+                  <p className="text-2xl sm:text-3xl font-serif font-bold text-principal">
                     {stats.activeReservations}
                   </p>
                   <p className="text-[10px] font-black uppercase tracking-widest text-principal/40 mt-1">
@@ -560,23 +736,23 @@ export default function AdminPage() {
                   </p>
                 </div>
 
-                <div className="bg-white p-7 rounded-3xl shadow-sm border border-gray-100">
+                <div className="bg-white p-5 sm:p-7 rounded-3xl shadow-sm border border-gray-100">
                   <div className="flex justify-between items-start mb-4">
                     <div className="p-3 rounded-2xl bg-purple-50 text-purple-600">
                       <TrendingUp className="w-5 h-5" />
                     </div>
                     <span className="text-[9px] font-black uppercase text-purple-600">Total</span>
                   </div>
-                  <p className="text-3xl font-serif font-bold text-principal">{stats.revenue}</p>
+                  <p className="text-2xl sm:text-3xl font-serif font-bold text-principal">{stats.revenue}</p>
                   <p className="text-[10px] font-black uppercase tracking-widest text-principal/40 mt-1">
                     Volume de Reservas
                   </p>
                 </div>
               </div>
 
-              <div className="bg-white p-8 rounded-3xl shadow-sm border border-gray-100">
-                <div className="flex justify-between items-center mb-6">
-                  <h2 className="text-xl font-serif font-bold text-principal">
+              <div className="bg-white p-5 sm:p-8 rounded-3xl shadow-sm border border-gray-100">
+                <div className="flex flex-wrap justify-between items-center gap-3 mb-5 sm:mb-6">
+                  <h2 className="text-lg sm:text-xl font-serif font-bold text-principal">
                     Últimas Reservas Recebidas
                   </h2>
                   <button
@@ -592,11 +768,22 @@ export default function AdminPage() {
                       key={b.id}
                       className="py-4 flex flex-wrap items-center justify-between gap-4"
                     >
-                      <div className="flex items-center gap-4">
-                        <span className="text-xs font-black text-principal/40 w-20">{b.id}</span>
+                      <div className="flex flex-wrap items-center gap-3 sm:gap-4">
+                        <span className="px-3 py-1.5 rounded-xl bg-principal text-white text-xs font-black tracking-wide shrink-0">
+                          {b.type === 'bungalows' ? `Bungalow ${b.resourceId}` : `Alvéolo ${b.resourceId}`}
+                        </span>
+                        <div className="px-3 py-1.5 rounded-xl bg-secundaria/20 border border-secundaria/40 text-principal text-xs font-bold flex items-center gap-1.5 shrink-0 tabular-nums">
+                          <Calendar className="w-3.5 h-3.5 text-principal/70" />
+                          <span>{formatDatePT(b.checkIn)}</span>
+                          <span className="text-principal/50">→</span>
+                          <span>{formatDatePT(b.checkOut)}</span>
+                        </div>
                         <div>
                           <p className="text-sm font-bold text-principal flex items-center gap-2">
                             {b.guestName}
+                            <span className="text-[11px] font-semibold text-principal/40">
+                              ({b.id})
+                            </span>
                             <span
                               className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase ${
                                 b.source === 'website'
@@ -616,8 +803,7 @@ export default function AdminPage() {
                             </span>
                           </p>
                           <p className="text-xs text-texto-main/60">
-                            {b.type === 'bungalows' ? 'Bungalow' : 'Alvéolo'} {b.resourceId} (
-                            {b.subtype}) • {b.checkIn} → {b.checkOut}
+                            {b.subtype} • {b.adults + b.children} hóspedes
                           </p>
                         </div>
                       </div>
@@ -686,11 +872,44 @@ export default function AdminPage() {
                   filteredBookings.map((b) => (
                     <div
                       key={b.id}
-                      className="bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-gray-100 flex flex-col lg:flex-row lg:items-center justify-between gap-6 hover:border-secundaria/40 transition-all"
+                      className="bg-white p-4 sm:p-6 md:p-7 rounded-3xl shadow-sm border border-gray-100 flex flex-col lg:flex-row lg:items-center justify-between gap-5 sm:gap-6 hover:border-secundaria/40 transition-all"
                     >
-                      <div className="space-y-3 flex-grow">
+                      <div className="space-y-4 flex-grow">
+                        {/* Primary Highlight: Space ID + Check-in / Check-out */}
                         <div className="flex flex-wrap items-center gap-3">
-                          <span className="text-xs font-black text-principal/30">{b.id}</span>
+                          <div className="inline-flex items-center gap-2.5 bg-principal text-white px-4 py-2 rounded-2xl shadow-sm">
+                            <Home className="w-4 h-4 text-secundaria shrink-0" />
+                            <span className="text-sm sm:text-base font-black tracking-wide">
+                              {b.type === 'bungalows'
+                                ? `Bungalow ${b.resourceId}`
+                                : `Alvéolo ${b.resourceId}`}
+                            </span>
+                            <span className="text-[10px] font-bold uppercase tracking-wider bg-white/15 px-2 py-0.5 rounded-full text-white/90">
+                              {b.subtype}
+                            </span>
+                          </div>
+
+                          <div className="inline-flex flex-wrap items-center gap-3 bg-secundaria/20 border border-secundaria/50 text-principal px-4 py-2 rounded-2xl">
+                            <div className="flex items-center gap-1.5">
+                              <Calendar className="w-4 h-4 text-principal shrink-0" />
+                              <span className="text-[10px] font-black uppercase tracking-wider text-principal/60">
+                                Check-in:
+                              </span>
+                              <span className="text-sm font-black tabular-nums">
+                                {formatDatePT(b.checkIn)}
+                              </span>
+                            </div>
+                            <span className="text-principal/40 font-black">→</span>
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-[10px] font-black uppercase tracking-wider text-principal/60">
+                                Check-out:
+                              </span>
+                              <span className="text-sm font-black tabular-nums">
+                                {formatDatePT(b.checkOut)}
+                              </span>
+                            </div>
+                          </div>
+
                           <span
                             className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest ${
                               STATUS_LABELS[b.status].badge
@@ -698,6 +917,17 @@ export default function AdminPage() {
                           >
                             {STATUS_LABELS[b.status].label}
                           </span>
+                        </div>
+
+                        {/* Secondary Row: Guest + Contact + Source */}
+                        <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-xs text-texto-main/70 pt-1">
+                          <div className="flex items-center gap-2">
+                            <User className="w-3.5 h-3.5 text-principal/40 shrink-0" />
+                            <span className="text-base font-serif font-bold text-principal">
+                              {b.guestName}
+                            </span>
+                            <span className="text-[11px] font-black text-principal/35">{b.id}</span>
+                          </div>
                           <span
                             className={`px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase ${
                               b.source === 'website'
@@ -707,31 +937,12 @@ export default function AdminPage() {
                           >
                             {b.source === 'website' ? 'Reserva Automática (Site)' : 'Receção'}
                           </span>
-                          <h3 className="text-xl font-serif font-bold text-principal">
-                            {b.guestName}
-                          </h3>
-                        </div>
-
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-xs text-texto-main/70">
-                          <div className="flex items-center gap-2">
-                            <Home className="w-4 h-4 text-secundaria shrink-0" />
-                            <span className="font-bold text-principal">
-                              {b.type === 'bungalows' ? 'Bungalow' : 'Alvéolo'} {b.resourceId}
-                            </span>
-                            <span className="text-texto-main/50">({b.subtype})</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <Calendar className="w-4 h-4 text-secundaria shrink-0" />
-                            <span>
-                              {b.checkIn} → {b.checkOut}
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <Mail className="w-4 h-4 text-secundaria shrink-0" />
+                          <div className="flex items-center gap-1.5">
+                            <Mail className="w-3.5 h-3.5 text-secundaria shrink-0" />
                             <span className="truncate">{b.email}</span>
                           </div>
-                          <div className="flex items-center gap-2">
-                            <Phone className="w-4 h-4 text-secundaria shrink-0" />
+                          <div className="flex items-center gap-1.5">
+                            <Phone className="w-3.5 h-3.5 text-secundaria shrink-0" />
                             <span>
                               {b.phone} •{' '}
                               <strong className="text-principal">{b.totalPrice.toFixed(2)}€</strong>
@@ -851,6 +1062,68 @@ export default function AdminPage() {
                 </div>
               </div>
 
+              {/* Active Occupied Alvéolo Cards for Selected Date */}
+              {(() => {
+                const occupiedUnits = alveoloResources
+                  .map((unit) => ({
+                    unit,
+                    booking: getBookingForResourceOnDate(unit.id, selectedDate),
+                  }))
+                  .filter((item): item is { unit: ResourceUnit; booking: Booking } => !!item.booking);
+
+                if (occupiedUnits.length === 0) return null;
+
+                return (
+                  <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 space-y-4">
+                    <div className="flex items-center justify-between gap-4">
+                      <h2 className="text-sm font-black uppercase tracking-widest text-principal">
+                        Alvéolos Reservados em {formatDatePT(selectedDate)} ({occupiedUnits.length})
+                      </h2>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+                      {occupiedUnits.map(({ unit, booking }) => (
+                        <button
+                          key={unit.id}
+                          type="button"
+                          onClick={() => setSelectedResource(unit)}
+                          className="text-left p-4 rounded-2xl bg-branco-quente/80 border border-secundaria/40 hover:border-principal transition-all space-y-2.5"
+                        >
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="px-3 py-1 rounded-xl bg-principal text-white text-xs font-black tracking-wide">
+                              Alvéolo {unit.id}
+                            </span>
+                            <span
+                              className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase ${
+                                STATUS_LABELS[booking.status].badge
+                              }`}
+                            >
+                              {STATUS_LABELS[booking.status].label}
+                            </span>
+                          </div>
+                          <div className="bg-secundaria/20 border border-secundaria/40 rounded-xl px-3 py-2 text-principal">
+                            <div className="flex items-center justify-between text-[11px] font-bold tabular-nums">
+                              <span>
+                                <span className="text-[9px] uppercase text-principal/60 mr-1">In:</span>
+                                {formatDatePT(booking.checkIn)}
+                              </span>
+                              <span className="text-principal/40">→</span>
+                              <span>
+                                <span className="text-[9px] uppercase text-principal/60 mr-1">Out:</span>
+                                {formatDatePT(booking.checkOut)}
+                              </span>
+                            </div>
+                          </div>
+                          <p className="text-xs font-bold text-principal truncate">
+                            {booking.guestName}{' '}
+                            <span className="text-principal/40 font-normal">({booking.id})</span>
+                          </p>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })()}
+
               {/* Sectors Grid */}
               <div className="bg-white p-6 md:p-10 rounded-3xl shadow-sm border border-gray-100 space-y-10">
                 {[
@@ -895,7 +1168,7 @@ export default function AdminPage() {
                               isBlocked
                                 ? 'Bloqueado'
                                 : isOccupied
-                                  ? `Ocupado: ${booking.guestName}`
+                                  ? `Ocupado: ${booking.guestName} | Check-in: ${formatDatePT(booking.checkIn)} → Check-out: ${formatDatePT(booking.checkOut)}`
                                   : 'Livre'
                             }`}
                             className={`aspect-square rounded-md text-[8px] font-bold flex items-center justify-center transition-all hover:scale-125 hover:z-20 ${
@@ -960,7 +1233,7 @@ export default function AdminPage() {
                   return (
                     <div
                       key={bUnit.id}
-                      className={`bg-white p-8 rounded-3xl shadow-sm border transition-all flex flex-col justify-between gap-6 ${
+                      className={`bg-white p-5 sm:p-7 md:p-8 rounded-3xl shadow-sm border transition-all flex flex-col justify-between gap-5 sm:gap-6 ${
                         bUnit.blocked
                           ? 'border-red-200 bg-red-50/20'
                           : activeOnDate
@@ -968,10 +1241,10 @@ export default function AdminPage() {
                             : 'border-gray-100'
                       }`}
                     >
-                      <div className="flex justify-between items-start">
+                      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
                         <div>
-                          <div className="flex items-center gap-3">
-                            <h3 className="text-3xl font-serif font-bold text-principal">
+                          <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+                            <h3 className="text-2xl sm:text-3xl font-serif font-bold text-principal">
                               {bUnit.id}
                             </h3>
                             <span className="px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest bg-branco-quente text-principal">
@@ -979,7 +1252,7 @@ export default function AdminPage() {
                             </span>
                           </div>
                           <p className="text-xs text-texto-main/50 mt-1">
-                            Estado em {selectedDate}:{' '}
+                            Estado em {formatDatePT(selectedDate)}:{' '}
                             <strong
                               className={
                                 bUnit.blocked
@@ -996,26 +1269,55 @@ export default function AdminPage() {
                                   : 'Disponível para Reserva Online'}
                             </strong>
                           </p>
+                          {activeOnDate && (
+                            <div className="mt-2.5 inline-flex flex-wrap items-center gap-2 bg-secundaria/20 border border-secundaria/40 text-principal px-3 py-1.5 rounded-xl text-xs font-bold tabular-nums">
+                              <Calendar className="w-3.5 h-3.5 shrink-0" />
+                              <span>Check-in: {formatDatePT(activeOnDate.checkIn)}</span>
+                              <span className="text-principal/40">→</span>
+                              <span>Check-out: {formatDatePT(activeOnDate.checkOut)}</span>
+                            </div>
+                          )}
                         </div>
 
-                        <button
-                          onClick={() => handleToggleBlock(bUnit)}
-                          className={`px-3.5 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5 transition-all ${
-                            bUnit.blocked
-                              ? 'bg-green-100 text-green-800 hover:bg-green-200'
-                              : 'bg-red-50 text-red-700 hover:bg-red-100'
-                          }`}
-                        >
-                          {bUnit.blocked ? (
-                            <>
-                              <Unlock className="w-3.5 h-3.5" /> Desbloquear
-                            </>
-                          ) : (
-                            <>
-                              <Lock className="w-3.5 h-3.5" /> Bloquear
-                            </>
+                        <div className="w-full sm:w-auto flex items-center gap-2 shrink-0">
+                          {!bUnit.blocked && !activeOnDate && (
+                            <button
+                              onClick={() => {
+                                setNewType('bungalows');
+                                setNewSubtypeKey(bUnit.bungalowClass || 'A');
+                                setNewPreferredUnit(bUnit.id);
+                                setNewUnitSearch('');
+                                setUnitInvalidNotice('');
+                                setNewCheckIn(selectedDate);
+                                const next = new Date(`${selectedDate}T12:00:00`);
+                                next.setDate(next.getDate() + 2);
+                                setNewCheckOut(next.toISOString().slice(0, 10));
+                                setShowNewModal(true);
+                              }}
+                              className="flex-1 sm:flex-initial justify-center min-h-[40px] px-3.5 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider bg-principal text-white hover:bg-secundaria hover:text-principal transition-all flex items-center cursor-pointer"
+                            >
+                              Reservar
+                            </button>
                           )}
-                        </button>
+                          <button
+                            onClick={() => handleToggleBlock(bUnit)}
+                            className={`flex-1 sm:flex-initial justify-center min-h-[40px] px-3.5 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5 transition-all cursor-pointer ${
+                              bUnit.blocked
+                                ? 'bg-green-100 text-green-800 hover:bg-green-200'
+                                : 'bg-red-50 text-red-700 hover:bg-red-100'
+                            }`}
+                          >
+                            {bUnit.blocked ? (
+                              <>
+                                <Unlock className="w-3.5 h-3.5" /> Desbloquear
+                              </>
+                            ) : (
+                              <>
+                                <Lock className="w-3.5 h-3.5" /> Bloquear
+                              </>
+                            )}
+                          </button>
+                        </div>
                       </div>
 
                       <div className="border-t border-gray-100 pt-5 space-y-3">
@@ -1030,18 +1332,26 @@ export default function AdminPage() {
                           upcomingForUnit.map((ub) => (
                             <div
                               key={ub.id}
-                              className="bg-branco-quente/70 p-4 rounded-2xl flex flex-wrap items-center justify-between gap-3 text-xs"
+                              className="bg-branco-quente/80 border border-gray-200/70 p-4 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs"
                             >
-                              <div>
+                              <div className="space-y-2">
+                                <div className="flex flex-wrap items-center gap-2">
+                                  <span className="px-2.5 py-1 rounded-lg bg-principal text-white font-black text-[11px]">
+                                    Bungalow {bUnit.id}
+                                  </span>
+                                  <span className="px-2.5 py-1 rounded-lg bg-secundaria/25 border border-secundaria/40 text-principal font-black tabular-nums">
+                                    {formatDatePT(ub.checkIn)} → {formatDatePT(ub.checkOut)}
+                                  </span>
+                                </div>
                                 <p className="font-bold text-principal">
                                   {ub.guestName}{' '}
                                   <span className="text-principal/40 font-normal">({ub.id})</span>
-                                </p>
-                                <p className="text-texto-main/60">
-                                  {ub.checkIn} → {ub.checkOut} • {ub.totalPrice.toFixed(2)}€
+                                  <span className="text-texto-main/60 font-semibold ml-2">
+                                    • {ub.totalPrice.toFixed(2)}€
+                                  </span>
                                 </p>
                               </div>
-                              <div className="flex items-center gap-2">
+                              <div className="flex items-center gap-2 shrink-0">
                                 <span
                                   className={`px-2.5 py-1 rounded-full text-[9px] font-black uppercase ${
                                     STATUS_LABELS[ub.status].badge
@@ -1086,7 +1396,7 @@ export default function AdminPage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-6"
+            className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-3 sm:p-6"
             onClick={() => setSelectedResource(null)}
           >
             <motion.div
@@ -1094,7 +1404,7 @@ export default function AdminPage() {
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
               onClick={(e) => e.stopPropagation()}
-              className="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl space-y-6"
+              className="bg-white rounded-2xl sm:rounded-3xl p-5 sm:p-8 max-w-md w-full shadow-2xl space-y-5 sm:space-y-6 max-h-[92vh] overflow-y-auto"
             >
               <div className="flex justify-between items-start">
                 <div>
@@ -1118,28 +1428,51 @@ export default function AdminPage() {
 
               {(() => {
                 const booking = getBookingForResourceOnDate(selectedResource.id, selectedDate);
+                const upcomingForResource = bookings.filter(
+                  (b) =>
+                    b.resourceId === selectedResource.id &&
+                    b.status !== 'cancelled' &&
+                    b.status !== 'checked-out'
+                );
+
                 return (
                   <div className="space-y-4">
-                    <div className="bg-branco-quente p-5 rounded-2xl space-y-2">
+                    <div className="bg-branco-quente p-5 rounded-2xl space-y-3">
                       <p className="text-[10px] font-black uppercase tracking-widest text-principal/40">
-                        Estado em {selectedDate}
+                        Estado em {formatDatePT(selectedDate)}
                       </p>
                       {selectedResource.blocked ? (
                         <p className="text-sm font-bold text-red-700 flex items-center gap-2">
                           <Lock className="w-4 h-4" /> Bloqueado (Indisponível no site público)
                         </p>
                       ) : booking ? (
-                        <div className="space-y-1">
+                        <div className="space-y-2.5">
+                          <div className="grid grid-cols-2 gap-2">
+                            <div className="bg-white border border-secundaria/40 rounded-xl p-2.5">
+                              <p className="text-[9px] font-black uppercase tracking-wider text-principal/50">
+                                Check-in
+                              </p>
+                              <p className="text-sm font-black text-principal tabular-nums">
+                                {formatDatePT(booking.checkIn)}
+                              </p>
+                            </div>
+                            <div className="bg-white border border-secundaria/40 rounded-xl p-2.5">
+                              <p className="text-[9px] font-black uppercase tracking-wider text-principal/50">
+                                Check-out
+                              </p>
+                              <p className="text-sm font-black text-principal tabular-nums">
+                                {formatDatePT(booking.checkOut)}
+                              </p>
+                            </div>
+                          </div>
                           <p className="text-sm font-bold text-principal">
-                            Ocupado por {booking.guestName}
-                          </p>
-                          <p className="text-xs text-texto-main/60">
-                            Reserva {booking.id} • {booking.checkIn} → {booking.checkOut}
+                            {booking.guestName}{' '}
+                            <span className="text-principal/40 font-normal text-xs">({booking.id})</span>
                           </p>
                           <p className="text-xs text-texto-main/60">
                             {booking.email} • {booking.phone}
                           </p>
-                          <div className="pt-3 flex gap-2">
+                          <div className="pt-1 flex gap-2">
                             {booking.status === 'confirmed' && (
                               <button
                                 onClick={() => handleBookingStatus(booking.id, 'checked-in')}
@@ -1162,6 +1495,38 @@ export default function AdminPage() {
                         </p>
                       )}
                     </div>
+
+                    {upcomingForResource.length > 0 && (
+                      <div className="space-y-2">
+                        <p className="text-[10px] font-black uppercase tracking-widest text-principal/40">
+                          Reservas deste Alvéolo ({upcomingForResource.length})
+                        </p>
+                        <div className="max-h-36 overflow-y-auto space-y-2">
+                          {upcomingForResource.map((ub) => (
+                            <div
+                              key={ub.id}
+                              className="p-3 rounded-xl bg-branco-quente/70 border border-gray-200/70 flex items-center justify-between gap-2 text-xs"
+                            >
+                              <div>
+                                <p className="font-black text-principal tabular-nums">
+                                  {ub.resourceId} • {formatDatePT(ub.checkIn)} → {formatDatePT(ub.checkOut)}
+                                </p>
+                                <p className="text-[11px] text-texto-main/70">
+                                  {ub.guestName} ({ub.id})
+                                </p>
+                              </div>
+                              <span
+                                className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase ${
+                                  STATUS_LABELS[ub.status].badge
+                                }`}
+                              >
+                                {STATUS_LABELS[ub.status].label}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
 
                     <div className="flex gap-3">
                       <button
@@ -1216,7 +1581,7 @@ export default function AdminPage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-6"
+            className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-3 sm:p-6"
             onClick={() => setShowNewModal(false)}
           >
             <motion.div
@@ -1224,12 +1589,17 @@ export default function AdminPage() {
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
               onClick={(e) => e.stopPropagation()}
-              className="bg-white rounded-3xl p-8 max-w-lg w-full shadow-2xl max-h-[90vh] overflow-y-auto"
+              className="bg-white rounded-2xl sm:rounded-3xl p-5 sm:p-8 max-w-2xl w-full shadow-2xl max-h-[92vh] overflow-y-auto"
             >
-              <div className="flex justify-between items-center mb-6">
-                <h3 className="text-2xl font-serif font-bold text-principal">
-                  Nova Reserva (Receção)
-                </h3>
+              <div className="flex justify-between items-center mb-5 sm:mb-6">
+                <div>
+                  <h3 className="text-xl sm:text-2xl font-serif font-bold text-principal">
+                    Nova Reserva (Receção)
+                  </h3>
+                  <p className="text-xs text-texto-main/55 mt-0.5">
+                    Escolha as datas e selecione o alvéolo ou bungalow disponível.
+                  </p>
+                </div>
                 <button
                   onClick={() => setShowNewModal(false)}
                   className="p-2 text-principal/40 hover:text-principal"
@@ -1238,56 +1608,10 @@ export default function AdminPage() {
                 </button>
               </div>
 
-              <form onSubmit={handleCreateManualBooking} className="space-y-4">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-[10px] font-black uppercase text-principal/40 block mb-1">
-                      Tipo
-                    </label>
-                    <select
-                      value={newType}
-                      onChange={(e) => {
-                        const t = e.target.value as AccommodationType;
-                        setNewType(t);
-                        setNewSubtypeKey(t === 'alveolos' ? 'grande' : 'A');
-                        setNewPreferredUnit('');
-                      }}
-                      className="w-full min-h-[44px] bg-branco-quente border border-gray-200 rounded-xl p-3 text-sm md:text-xs font-bold"
-                    >
-                      <option value="alveolos">Alvéolo</option>
-                      <option value="bungalows">Bungalow</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="text-[10px] font-black uppercase text-principal/40 block mb-1">
-                      Categoria / Classe
-                    </label>
-                    <select
-                      value={newSubtypeKey}
-                      onChange={(e) => {
-                        setNewSubtypeKey(e.target.value);
-                        setNewPreferredUnit('');
-                      }}
-                      className="w-full min-h-[44px] bg-branco-quente border border-gray-200 rounded-xl p-3 text-sm md:text-xs font-bold"
-                    >
-                      {newType === 'alveolos' ? (
-                        <>
-                          <option value="pequeno">Pequeno (até 35m²)</option>
-                          <option value="grande">Grande (até 90m²)</option>
-                          <option value="xl">XL (+90m²)</option>
-                        </>
-                      ) : (
-                        <>
-                          <option value="A">Classe A (até 5 pax)</option>
-                          <option value="B">Classe B (até 4 pax)</option>
-                        </>
-                      )}
-                    </select>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
+              <form onSubmit={handleCreateManualBooking} className="space-y-5">
+                {/* 1. Datas e Hóspedes */}
+                <div className="grid grid-cols-1 min-[360px]:grid-cols-2 sm:grid-cols-4 gap-3">
+                  <div className="min-w-0">
                     <label className="text-[10px] font-black uppercase text-principal/40 block mb-1">
                       Check-in
                     </label>
@@ -1296,7 +1620,7 @@ export default function AdminPage() {
                       required
                       value={newCheckIn}
                       onChange={(e) => setNewCheckIn(e.target.value)}
-                      className="w-full min-h-[44px] bg-branco-quente border border-gray-200 rounded-xl p-3 text-sm md:text-xs font-bold"
+                      className="w-full min-w-0 min-h-[44px] bg-branco-quente border border-gray-200 rounded-xl p-2.5 text-sm md:text-xs font-bold"
                     />
                   </div>
                   <div>
@@ -1308,34 +1632,9 @@ export default function AdminPage() {
                       required
                       value={newCheckOut}
                       onChange={(e) => setNewCheckOut(e.target.value)}
-                      className="w-full min-h-[44px] bg-branco-quente border border-gray-200 rounded-xl p-3 text-sm md:text-xs font-bold"
+                      className="w-full min-h-[44px] bg-branco-quente border border-gray-200 rounded-xl p-2.5 text-sm md:text-xs font-bold"
                     />
                   </div>
-                </div>
-
-                <div>
-                  <label className="text-[10px] font-black uppercase text-principal/40 block mb-1">
-                    Unidade Disponível ({newAvailIds.length} livres)
-                  </label>
-                  <select
-                    value={newPreferredUnit}
-                    onChange={(e) => setNewPreferredUnit(e.target.value)}
-                    className="w-full bg-branco-quente border border-gray-200 rounded-xl p-3 text-xs font-bold"
-                  >
-                    <option value="">
-                      {newAvailIds.length > 0
-                        ? `Automático (${newAvailIds[0]})`
-                        : 'Sem unidades livres nestas datas'}
-                    </option>
-                    {newAvailIds.slice(0, 60).map((id) => (
-                      <option key={id} value={id}>
-                        {id}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="text-[10px] font-black uppercase text-principal/40 block mb-1">
                       Adultos
@@ -1346,7 +1645,7 @@ export default function AdminPage() {
                       max={8}
                       value={newAdults}
                       onChange={(e) => setNewAdults(parseInt(e.target.value, 10) || 1)}
-                      className="w-full bg-branco-quente border border-gray-200 rounded-xl p-3 text-xs font-bold"
+                      className="w-full min-h-[44px] bg-branco-quente border border-gray-200 rounded-xl p-2.5 text-sm md:text-xs font-bold"
                     />
                   </div>
                   <div>
@@ -1359,11 +1658,317 @@ export default function AdminPage() {
                       max={6}
                       value={newChildren}
                       onChange={(e) => setNewChildren(parseInt(e.target.value, 10) || 0)}
-                      className="w-full bg-branco-quente border border-gray-200 rounded-xl p-3 text-xs font-bold"
+                      className="w-full min-h-[44px] bg-branco-quente border border-gray-200 rounded-xl p-2.5 text-sm md:text-xs font-bold"
                     />
                   </div>
                 </div>
 
+                {/* 2. Tipo e Filtro de Categoria */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-[10px] font-black uppercase text-principal/40 block mb-1">
+                      Tipo de Alojamento
+                    </label>
+                    <div className="grid grid-cols-2 gap-2">
+                      {[
+                        {
+                          id: 'alveolos' as AccommodationType,
+                          label: 'Alvéolo',
+                          count: newAvailability?.alveolos.totalAvailable,
+                        },
+                        {
+                          id: 'bungalows' as AccommodationType,
+                          label: 'Bungalow',
+                          count: newAvailability?.bungalows.totalAvailable,
+                        },
+                      ].map((t) => (
+                        <button
+                          key={t.id}
+                          type="button"
+                          onClick={() => {
+                            setNewType(t.id);
+                            setNewSubtypeKey('all');
+                            setNewPreferredUnit('');
+                            setNewUnitSearch('');
+                            setUnitInvalidNotice('');
+                          }}
+                          className={`min-h-[44px] px-3 py-2 rounded-xl border text-xs font-bold flex items-center justify-between transition-all ${
+                            newType === t.id
+                              ? 'bg-principal text-white border-principal shadow-sm'
+                              : 'bg-branco-quente text-principal/70 border-gray-200 hover:border-principal/40'
+                          }`}
+                        >
+                          <span>{t.label}</span>
+                          {t.count !== undefined && (
+                            <span
+                              className={`text-[10px] px-1.5 py-0.5 rounded-full font-black ${
+                                newType === t.id
+                                  ? 'bg-secundaria text-principal'
+                                  : 'bg-white text-principal/60'
+                              }`}
+                            >
+                              {t.count}
+                            </span>
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="text-[10px] font-black uppercase text-principal/40 block mb-1">
+                      Filtrar Categoria / Classe
+                    </label>
+                    <select
+                      value={newSubtypeKey}
+                      onChange={(e) => {
+                        setNewSubtypeKey(e.target.value);
+                        setNewPreferredUnit('');
+                      }}
+                      className="w-full min-h-[44px] bg-branco-quente border border-gray-200 rounded-xl p-3 text-sm md:text-xs font-bold"
+                    >
+                      {newType === 'alveolos' ? (
+                        <>
+                          <option value="all">
+                            Todos os Alvéolos ({newAvailability?.alveolos.totalAvailable ?? 0} livres)
+                          </option>
+                          <option value="pequeno">
+                            Pequeno — até 35m² ({newAvailability?.alveolos.pequeno.availableUnits ?? 0} livres)
+                          </option>
+                          <option value="grande">
+                            Grande — até 90m² ({newAvailability?.alveolos.grande.availableUnits ?? 0} livres)
+                          </option>
+                          <option value="xl">
+                            XL — +90m² ({newAvailability?.alveolos.xl.availableUnits ?? 0} livres)
+                          </option>
+                        </>
+                      ) : (
+                        <>
+                          <option value="all">
+                            Todos os Bungalows ({newAvailability?.bungalows.totalAvailable ?? 0} livres)
+                          </option>
+                          <option value="A">
+                            Classe A — até 5 pax ({newAvailability?.bungalows.classeA.availableUnits ?? 0} livres)
+                          </option>
+                          <option value="B">
+                            Classe B — até 4 pax ({newAvailability?.bungalows.classeB.availableUnits ?? 0} livres)
+                          </option>
+                        </>
+                      )}
+                    </select>
+                  </div>
+                </div>
+
+                {/* 3. Seleção da Unidade Disponível */}
+                <div className="bg-branco-quente/70 border border-gray-200/80 rounded-2xl p-4 space-y-3">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <label className="text-[10px] font-black uppercase tracking-wider text-principal">
+                      {newType === 'alveolos'
+                        ? `Selecionar Alvéolo Disponível (${manualBookingAvailability.filteredIds.length} livres nestas datas)`
+                        : `Selecionar Bungalow Disponível (${manualBookingAvailability.filteredIds.length} livres nestas datas)`}
+                    </label>
+                    {loadingNewAvail && (
+                      <span className="text-[10px] text-principal/50 font-semibold">
+                        A atualizar...
+                      </span>
+                    )}
+                  </div>
+
+                  {unitInvalidNotice && (
+                    <p className="text-[11px] text-amber-800 bg-amber-50 border border-amber-200 px-3 py-2 rounded-xl font-medium">
+                      {unitInvalidNotice}
+                    </p>
+                  )}
+
+                  {newCheckOut <= newCheckIn ? (
+                    <p className="text-xs text-red-600 font-medium">
+                      A data de check-out deve ser posterior ao check-in.
+                    </p>
+                  ) : newType === 'bungalows' ? (
+                    <div className="space-y-2.5">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        {bungalowResources
+                          .filter(
+                            (b) => newSubtypeKey === 'all' || b.bungalowClass === newSubtypeKey
+                          )
+                          .map((bUnit) => {
+                            const isAvailable =
+                              manualBookingAvailability.availableSetForType.has(bUnit.id);
+                            const isSelected = newPreferredUnit === bUnit.id;
+                            const totalGuests = newAdults + newChildren;
+                            const overCapacity = totalGuests > bUnit.capacity;
+                            const priceInfo =
+                              bUnit.bungalowClass === 'A'
+                                ? newAvailability?.bungalows.classeA.estimatedTotal
+                                : newAvailability?.bungalows.classeB.estimatedTotal;
+
+                            return (
+                              <button
+                                key={bUnit.id}
+                                type="button"
+                                disabled={!isAvailable || overCapacity}
+                                onClick={() => setNewPreferredUnit(isSelected ? '' : bUnit.id)}
+                                className={`p-3 rounded-xl border text-left transition-all flex items-center justify-between gap-2 ${
+                                  isSelected
+                                    ? 'bg-principal text-white border-principal ring-2 ring-secundaria shadow-md'
+                                    : isAvailable && !overCapacity
+                                      ? 'bg-white border-gray-200 hover:border-principal/40 text-principal'
+                                      : 'bg-gray-100/80 border-gray-200 text-gray-400 cursor-not-allowed opacity-70'
+                                }`}
+                              >
+                                <div>
+                                  <div className="flex items-center gap-2">
+                                    <span className="font-serif font-bold text-sm">{bUnit.id}</span>
+                                    <span
+                                      className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-full ${
+                                        isSelected
+                                          ? 'bg-secundaria text-principal'
+                                          : 'bg-branco-quente text-principal/70'
+                                      }`}
+                                    >
+                                      Classe {bUnit.bungalowClass} • até {bUnit.capacity} pax
+                                    </span>
+                                  </div>
+                                  <p
+                                    className={`text-[10px] mt-1 font-medium ${
+                                      isSelected
+                                        ? 'text-white/80'
+                                        : !isAvailable
+                                          ? 'text-red-600'
+                                          : overCapacity
+                                            ? 'text-amber-700'
+                                            : 'text-emerald-700'
+                                    }`}
+                                  >
+                                    {!isAvailable
+                                      ? bUnit.blocked
+                                        ? 'Bloqueado'
+                                        : 'Ocupado nestas datas'
+                                      : overCapacity
+                                        ? `Excede lotação (${bUnit.capacity} pax)`
+                                        : `Disponível${priceInfo ? ` • ${priceInfo.toFixed(2)}€` : ''}`}
+                                  </p>
+                                </div>
+                                {isSelected && <CheckCircle2 className="w-4 h-4 text-secundaria shrink-0" />}
+                              </button>
+                            );
+                          })}
+                      </div>
+
+                      <div className="flex items-center justify-between text-[11px] text-principal/65 pt-1">
+                        <span>
+                          {newPreferredUnit
+                            ? `Bungalow selecionado: ${newPreferredUnit}`
+                            : manualBookingAvailability.filteredIds.length > 0
+                              ? `Atribuição automática: ${manualBookingAvailability.filteredIds[0]}`
+                              : 'Sem bungalows livres para estas datas.'}
+                        </span>
+                        {newPreferredUnit && (
+                          <button
+                            type="button"
+                            onClick={() => setNewPreferredUnit('')}
+                            className="text-principal font-bold underline hover:text-secundaria"
+                          >
+                            Voltar a automático
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="space-y-2.5">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                        <div className="relative">
+                          <Search className="w-3.5 h-3.5 text-principal/40 absolute left-3 top-1/2 -translate-y-1/2" />
+                          <input
+                            type="text"
+                            value={newUnitSearch}
+                            onChange={(e) => setNewUnitSearch(e.target.value)}
+                            placeholder="Pesquisar alvéolo (ex: 120, Sul)..."
+                            className="w-full min-h-[40px] bg-white border border-gray-200 rounded-xl pl-8 pr-3 py-2 text-xs font-medium focus:outline-none focus:border-secundaria"
+                          />
+                        </div>
+
+                        <select
+                          value={newPreferredUnit}
+                          onChange={(e) => setNewPreferredUnit(e.target.value)}
+                          className="w-full min-h-[40px] bg-white border border-gray-200 rounded-xl px-3 py-2 text-xs font-bold text-principal"
+                        >
+                          <option value="">
+                            {(() => {
+                              const firstEligible = manualBookingAvailability.matchingUnits.find(
+                                (u) => newAdults + newChildren <= u.capacity
+                              );
+                              if (firstEligible) return `Atribuição Automática (${firstEligible.id})`;
+                              if (manualBookingAvailability.filteredIds.length > 0)
+                                return 'Sem alvéolos compatíveis com a lotação';
+                              return 'Sem alvéolos livres nestas datas';
+                            })()}
+                          </option>
+                          {manualBookingAvailability.matchingUnits.map((u) => {
+                            const overCapacity = newAdults + newChildren > u.capacity;
+                            return (
+                              <option key={u.id} value={u.id} disabled={overCapacity}>
+                                {u.id} — Alvéolo {u.number} ({u.size} · Setor {u.sector} · Rua {u.street}
+                                {overCapacity ? ` · máx ${u.capacity} pax` : ''})
+                              </option>
+                            );
+                          })}
+                        </select>
+                      </div>
+
+                      {manualBookingAvailability.matchingUnits.length > 0 ? (
+                        <div className="max-h-36 overflow-y-auto bg-white border border-gray-200 rounded-xl p-2 grid grid-cols-4 min-[400px]:grid-cols-5 sm:grid-cols-8 gap-1.5">
+                          {manualBookingAvailability.matchingUnits.map((u) => {
+                            const isSelected = newPreferredUnit === u.id;
+                            const overCapacity = newAdults + newChildren > u.capacity;
+                            return (
+                              <button
+                                key={u.id}
+                                type="button"
+                                disabled={overCapacity}
+                                onClick={() => setNewPreferredUnit(isSelected ? '' : u.id)}
+                                title={`${u.name} • ${u.size?.toUpperCase()} • Setor ${u.sector} • até ${u.capacity} pax`}
+                                className={`py-1.5 px-1 rounded-lg text-[10px] font-bold transition-all ${
+                                  isSelected
+                                    ? 'bg-principal text-white ring-2 ring-secundaria shadow-sm'
+                                    : overCapacity
+                                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                                      : 'bg-emerald-50 text-emerald-800 border border-emerald-200 hover:bg-emerald-100'
+                                }`}
+                              >
+                                {u.id}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      ) : (
+                        <p className="text-xs text-texto-main/50 italic py-2 text-center bg-white rounded-xl border border-gray-100">
+                          Nenhum alvéolo disponível encontrado para este filtro/pesquisa.
+                        </p>
+                      )}
+                    </div>
+                  )}
+
+                  {selectedManualSummary && newCheckOut > newCheckIn && (
+                    <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-gray-200/70 text-[11px]">
+                      <span className="text-principal/70 font-medium">
+                        {selectedPreferredUnitObj
+                          ? `${selectedPreferredUnitObj.name} (${
+                              selectedPreferredUnitObj.type === 'alveolos'
+                                ? `${selectedPreferredUnitObj.size?.toUpperCase()} · Setor ${selectedPreferredUnitObj.sector}`
+                                : `Classe ${selectedPreferredUnitObj.bungalowClass}`
+                            } · máx. ${selectedPreferredUnitObj.capacity} pax)`
+                          : `${selectedManualSummary.label} (Automático)`}
+                      </span>
+                      <span className="font-bold text-principal">
+                        Total estimado: {selectedManualSummary.estimatedTotal.toFixed(2)}€ ({selectedManualSummary.nights}{' '}
+                        {selectedManualSummary.nights === 1 ? 'noite' : 'noites'})
+                      </span>
+                    </div>
+                  )}
+                </div>
+
+                {/* 4. Dados do Cliente */}
                 <div>
                   <label className="text-[10px] font-black uppercase text-principal/40 block mb-1">
                     Nome do Cliente *
@@ -1373,7 +1978,7 @@ export default function AdminPage() {
                     required
                     value={newGuestName}
                     onChange={(e) => setNewGuestName(e.target.value)}
-                    className="w-full bg-branco-quente border border-gray-200 rounded-xl p-3 text-xs"
+                    className="w-full min-h-[44px] bg-branco-quente border border-gray-200 rounded-xl p-3 text-xs"
                     placeholder="Nome completo"
                   />
                 </div>
@@ -1407,6 +2012,12 @@ export default function AdminPage() {
                   </div>
                 </div>
 
+                {selectedManualSummary && !selectedManualSummary.eligible && newCheckOut > newCheckIn && (
+                  <p className="text-xs text-amber-800 bg-amber-50 border border-amber-200 p-3 rounded-xl font-medium">
+                    {selectedManualSummary.ineligibleReason}
+                  </p>
+                )}
+
                 {newBookingError && (
                   <p className="text-xs text-red-600 bg-red-50 p-3 rounded-xl font-medium">
                     {newBookingError}
@@ -1415,10 +2026,19 @@ export default function AdminPage() {
 
                 <button
                   type="submit"
-                  disabled={creatingBooking || newAvailIds.length === 0}
+                  disabled={
+                    creatingBooking ||
+                    newCheckOut <= newCheckIn ||
+                    manualBookingAvailability.filteredIds.length === 0 ||
+                    (selectedManualSummary ? !selectedManualSummary.eligible : false)
+                  }
                   className="w-full bg-principal text-white py-4 rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-secundaria hover:text-principal transition-all disabled:opacity-40"
                 >
-                  {creatingBooking ? 'A registar...' : 'Criar Reserva Confirmada'}
+                  {creatingBooking
+                    ? 'A registar...'
+                    : newPreferredUnit
+                      ? `Criar Reserva Confirmada (${newPreferredUnit})`
+                      : 'Criar Reserva Confirmada'}
                 </button>
               </form>
             </motion.div>

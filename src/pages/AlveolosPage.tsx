@@ -105,7 +105,7 @@ export default function AlveolosPage() {
       className="bg-branco-quente min-h-screen"
     >
       {/* Hero Section */}
-      <section className="relative min-h-[60vh] md:min-h-[65vh] flex items-end pb-14 md:pb-20 pt-28 md:pt-36 px-4 sm:px-6 overflow-hidden">
+      <section className="relative min-h-[54vh] sm:min-h-[60vh] md:min-h-[65vh] flex items-end pb-12 sm:pb-14 md:pb-20 pt-24 sm:pt-28 md:pt-36 px-4 sm:px-6 overflow-hidden">
         <img
           src="/assets/entrada.jpg"
           alt="Área de Alvéolos do Camping Ria Formosa"
@@ -120,21 +120,21 @@ export default function AlveolosPage() {
           <h1 className="text-3xl sm:text-5xl md:text-6xl font-serif leading-[1.08] max-w-3xl [text-wrap:balance] mb-4 sm:mb-6">
             Alvéolos Individuais na Natureza
           </h1>
-          <p className="text-base sm:text-lg text-white/85 max-w-2xl font-light leading-relaxed mb-8 sm:mb-10">
+          <p className="text-base sm:text-lg text-white/85 max-w-2xl font-light leading-relaxed mb-7 sm:mb-10">
             Espaços individuais, perfeitamente identificados com ligação elétrica, num total de cerca
             de 350 alvéolos para tendas, caravanas e autocaravanas.
           </p>
           <div className="flex flex-col sm:flex-row sm:flex-wrap gap-3 sm:gap-4">
             <Link
               to="/reservar?tipo=alveolos"
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-3 bg-secundaria text-principal min-h-[48px] px-8 py-4 rounded-full font-bold text-xs uppercase tracking-[0.18em] hover:bg-white transition-colors whitespace-nowrap"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 sm:gap-3 bg-secundaria text-principal min-h-[48px] px-5 sm:px-8 py-4 rounded-full font-bold text-[11px] sm:text-xs uppercase tracking-[0.14em] sm:tracking-[0.18em] hover:bg-white transition-colors sm:whitespace-nowrap text-center"
             >
-              Reservar Alvéolo
-              <ArrowRight className="w-4 h-4" />
+              <span>Reservar Alvéolo</span>
+              <ArrowRight className="w-4 h-4 shrink-0" />
             </Link>
             <a
               href="#tarifario"
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 border border-white/35 text-white min-h-[48px] px-8 py-4 rounded-full font-bold text-xs uppercase tracking-[0.18em] hover:bg-white hover:text-principal transition-colors whitespace-nowrap"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 border border-white/35 text-white min-h-[48px] px-5 sm:px-8 py-4 rounded-full font-bold text-[11px] sm:text-xs uppercase tracking-[0.14em] sm:tracking-[0.18em] hover:bg-white hover:text-principal transition-colors sm:whitespace-nowrap text-center"
             >
               Ver Tarifas 2026/27
             </a>
@@ -155,19 +155,22 @@ export default function AlveolosPage() {
               </h2>
             </div>
 
-            <div className="flex flex-wrap sm:inline-flex w-full sm:w-auto gap-1.5 p-1.5 bg-white rounded-2xl border border-principal/10 shrink-0">
+            <div className="grid grid-cols-3 sm:inline-flex w-full sm:w-auto gap-1 sm:gap-1.5 p-1.5 bg-white rounded-2xl border border-principal/10 shrink-0">
               {(['pequeno', 'grande', 'xl'] as const).map((tierKey) => (
                 <button
                   key={tierKey}
                   type="button"
                   onClick={() => setSelectedTier(tierKey)}
-                  className={`flex-1 sm:flex-initial min-h-[44px] px-3 sm:px-5 py-2.5 rounded-xl text-xs font-semibold transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
+                  className={`min-h-[44px] px-2 sm:px-5 py-2.5 rounded-xl text-xs font-semibold transition-colors whitespace-nowrap text-center cursor-pointer ${
                     selectedTier === tierKey
                       ? 'bg-principal text-white'
                       : 'text-principal/65 hover:text-principal'
                   }`}
                 >
-                  {PLOT_TIERS[tierKey].title}
+                  <span className="sm:hidden">
+                    {tierKey === 'pequeno' ? 'Pequeno' : tierKey === 'grande' ? 'Grande' : 'XL'}
+                  </span>
+                  <span className="hidden sm:inline">{PLOT_TIERS[tierKey].title}</span>
                 </button>
               ))}
             </div>
@@ -216,10 +219,10 @@ export default function AlveolosPage() {
                   {activeTier.rates.map((r) => (
                     <div
                       key={r.label}
-                      className="py-3.5 flex items-center justify-between gap-4 text-sm"
+                      className="py-3.5 flex flex-col min-[380px]:flex-row min-[380px]:items-center justify-between gap-1 min-[380px]:gap-4 text-xs sm:text-sm"
                     >
                       <span className="text-texto-main/75 font-light">{r.label}</span>
-                      <span className="font-serif font-bold text-principal tabular-nums whitespace-nowrap">
+                      <span className="font-serif font-bold text-principal tabular-nums whitespace-nowrap shrink-0">
                         {r.price}
                       </span>
                     </div>
@@ -235,8 +238,8 @@ export default function AlveolosPage() {
         </motion.section>
 
         {/* 02. Estrutura e Comodidades */}
-        <motion.section {...fadeInUp} className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-stretch">
-          <div className="lg:col-span-6 rounded-3xl overflow-hidden shadow-xl min-h-[340px]">
+        <motion.section {...fadeInUp} className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12 items-stretch">
+          <div className="lg:col-span-6 rounded-3xl overflow-hidden shadow-xl h-60 sm:h-80 lg:h-full lg:min-h-[340px]">
             <img
               src="/assets/entrada.jpg"
               alt="Parcelas individuais sombreadas no Camping Ria Formosa"
@@ -340,10 +343,10 @@ export default function AlveolosPage() {
           </div>
           <Link
             to="/reservar?tipo=alveolos"
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-3 bg-secundaria text-principal min-h-[48px] px-8 sm:px-9 py-4 rounded-full font-bold text-xs uppercase tracking-[0.18em] hover:bg-white transition-colors whitespace-nowrap shrink-0"
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 sm:gap-3 bg-secundaria text-principal min-h-[48px] px-5 sm:px-9 py-4 rounded-full font-bold text-[11px] sm:text-xs uppercase tracking-[0.14em] sm:tracking-[0.18em] hover:bg-white transition-colors sm:whitespace-nowrap text-center shrink-0"
           >
-            Reservar Alvéolo
-            <ArrowRight className="w-4 h-4" />
+            <span>Reservar Alvéolo</span>
+            <ArrowRight className="w-4 h-4 shrink-0" />
           </Link>
         </motion.section>
       </div>

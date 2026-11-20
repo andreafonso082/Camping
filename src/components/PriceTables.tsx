@@ -48,18 +48,49 @@ export default function PriceTables() {
                 <span className="text-sm font-sans font-bold text-secundaria tabular-nums">01.</span>
                 Camping Geral 2026/27
               </h3>
-              <span className="sm:hidden text-[10px] font-semibold uppercase tracking-wider text-principal/45">
-                Deslize para ver épocas →
-              </span>
             </div>
-            <div className="overflow-x-auto rounded-2xl border border-principal/10">
-              <table className="w-full min-w-[540px] text-left border-collapse bg-white">
+
+            {/* Mobile stacked cards (zero horizontal scroll) */}
+            <div className="sm:hidden space-y-3">
+              {generalPrices.map((row, i) => (
+                <div
+                  key={i}
+                  className="bg-branco-quente/60 border border-principal/10 rounded-2xl p-4 space-y-3"
+                >
+                  <p className="font-semibold text-sm text-principal">{row.name}</p>
+                  <div className="grid grid-cols-3 gap-2 pt-2 border-t border-principal/10 text-center">
+                    <div>
+                      <p className="text-[9px] font-bold uppercase tracking-wider text-principal/50">
+                        16/09–14/06
+                      </p>
+                      <p className="text-xs font-bold text-principal mt-0.5 tabular-nums">{row.p1}</p>
+                    </div>
+                    <div className="border-x border-principal/10 px-1">
+                      <p className="text-[9px] font-bold uppercase tracking-wider text-principal/50">
+                        Ép. Média
+                      </p>
+                      <p className="text-xs font-bold text-principal mt-0.5 tabular-nums">{row.p2}</p>
+                    </div>
+                    <div>
+                      <p className="text-[9px] font-bold uppercase tracking-wider text-principal/50">
+                        01/08–31/08
+                      </p>
+                      <p className="text-xs font-bold text-principal mt-0.5 tabular-nums">{row.p3}</p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Tablet & Desktop Table */}
+            <div className="hidden sm:block overflow-x-auto rounded-2xl border border-principal/10">
+              <table className="w-full text-left border-collapse bg-white">
                 <thead>
                   <tr className="bg-principal text-white">
-                    <th className="p-3.5 sm:p-4 md:p-5 text-[11px] uppercase tracking-wider font-bold">Modalidade</th>
-                    <th className="p-3.5 sm:p-4 md:p-5 text-[11px] uppercase tracking-wider font-bold tabular-nums">16/09 a 14/06</th>
-                    <th className="p-3.5 sm:p-4 md:p-5 text-[11px] uppercase tracking-wider font-bold tabular-nums">15/06–31/07 &amp; 01/09–15/09</th>
-                    <th className="p-3.5 sm:p-4 md:p-5 text-[11px] uppercase tracking-wider font-bold tabular-nums">01/08 a 31/08</th>
+                    <th className="p-4 md:p-5 text-[11px] uppercase tracking-wider font-bold">Modalidade</th>
+                    <th className="p-4 md:p-5 text-[11px] uppercase tracking-wider font-bold tabular-nums">16/09 a 14/06</th>
+                    <th className="p-4 md:p-5 text-[11px] uppercase tracking-wider font-bold tabular-nums">15/06–31/07 &amp; 01/09–15/09</th>
+                    <th className="p-4 md:p-5 text-[11px] uppercase tracking-wider font-bold tabular-nums">01/08 a 31/08</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-principal/10">
@@ -68,10 +99,10 @@ export default function PriceTables() {
                       key={i} 
                       className="hover:bg-branco-quente transition-colors"
                     >
-                      <td className="p-3.5 sm:p-4 md:p-5 font-semibold text-xs sm:text-sm text-principal">{row.name}</td>
-                      <td className="p-3.5 sm:p-4 md:p-5 text-xs sm:text-sm text-texto-main/75 tabular-nums">{row.p1}</td>
-                      <td className="p-3.5 sm:p-4 md:p-5 text-xs sm:text-sm text-texto-main/75 tabular-nums">{row.p2}</td>
-                      <td className="p-3.5 sm:p-4 md:p-5 text-xs sm:text-sm text-texto-main/75 font-medium tabular-nums">{row.p3}</td>
+                      <td className="p-4 md:p-5 font-semibold text-xs sm:text-sm text-principal">{row.name}</td>
+                      <td className="p-4 md:p-5 text-xs sm:text-sm text-texto-main/75 tabular-nums">{row.p1}</td>
+                      <td className="p-4 md:p-5 text-xs sm:text-sm text-texto-main/75 tabular-nums">{row.p2}</td>
+                      <td className="p-4 md:p-5 text-xs sm:text-sm text-texto-main/75 font-medium tabular-nums">{row.p3}</td>
                     </tr>
                   ))}
                 </tbody>

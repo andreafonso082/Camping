@@ -169,7 +169,7 @@ export default function RiaFormosaPage() {
       className="bg-branco-quente min-h-screen"
     >
       {/* Hero Section */}
-      <section className="relative min-h-[68vh] md:min-h-[78vh] flex items-end pb-14 md:pb-20 pt-28 md:pt-36 px-4 sm:px-6 overflow-hidden">
+      <section className="relative min-h-[60vh] sm:min-h-[68vh] md:min-h-[78vh] flex items-end pb-12 sm:pb-14 md:pb-20 pt-24 sm:pt-28 md:pt-36 px-4 sm:px-6 overflow-hidden">
         <ImageWithFallback
           src={heroRiaImg}
           alt="Vista panorâmica sobre o Parque Natural da Ria Formosa ao pôr do sol"
@@ -195,16 +195,16 @@ export default function RiaFormosaPage() {
           <h1 className="text-3xl sm:text-5xl md:text-6xl font-serif leading-[1.08] max-w-3xl [text-wrap:balance] mb-4 sm:mb-6">
             Ria Formosa, Cabanas, Tavira e o Algarve Autêntico
           </h1>
-          <p className="text-base sm:text-lg text-white/85 max-w-2xl font-light leading-relaxed mb-8 sm:mb-10">
+          <p className="text-base sm:text-lg text-white/85 max-w-2xl font-light leading-relaxed mb-7 sm:mb-10">
             Entre lagoas de água turquesa, ilhas-barreira de areia dourada e vilas caiadas de
             tradição piscatória, descubra o território que envolve o Camping Ria Formosa.
           </p>
           <Link
             to="/reservar"
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-3 bg-secundaria text-principal min-h-[48px] px-8 py-4 rounded-full font-bold text-xs uppercase tracking-[0.18em] hover:bg-white transition-colors duration-200 whitespace-nowrap"
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 sm:gap-3 bg-secundaria text-principal min-h-[48px] px-5 sm:px-8 py-4 rounded-full font-bold text-[11px] sm:text-xs uppercase tracking-[0.14em] sm:tracking-[0.18em] hover:bg-white transition-colors duration-200 sm:whitespace-nowrap text-center"
           >
-            Planear Estadia no Parque
-            <ArrowRight className="w-4 h-4" />
+            <span>Planear Estadia no Parque</span>
+            <ArrowRight className="w-4 h-4 shrink-0" />
           </Link>
         </div>
       </section>
@@ -270,7 +270,7 @@ export default function RiaFormosaPage() {
           </div>
 
           <div className="lg:col-span-6">
-            <div className="rounded-3xl overflow-hidden shadow-xl h-80 lg:h-full min-h-[380px]">
+            <div className="rounded-3xl overflow-hidden shadow-xl h-64 sm:h-80 lg:h-full lg:min-h-[380px]">
               <ImageWithFallback
                 src={praiasImg}
                 alt="Dunas e areal preservado da Ilha de Cabanas na Ria Formosa"
@@ -281,9 +281,9 @@ export default function RiaFormosaPage() {
         </motion.section>
 
         {/* 02. Cabanas de Tavira */}
-        <motion.section {...fadeInUp} className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-stretch">
+        <motion.section {...fadeInUp} className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12 items-stretch">
           <div className="lg:col-span-6 order-2 lg:order-1">
-            <div className="rounded-3xl overflow-hidden shadow-xl h-80 lg:h-full min-h-[380px]">
+            <div className="rounded-3xl overflow-hidden shadow-xl h-64 sm:h-80 lg:h-full lg:min-h-[380px]">
               <ImageWithFallback
                 src={cabanasImg}
                 alt="Marginal de Cabanas de Tavira com barcos tradicionais e pontão de madeira"
@@ -359,7 +359,7 @@ export default function RiaFormosaPage() {
           </div>
 
           <div className="lg:col-span-6">
-            <div className="rounded-3xl overflow-hidden shadow-xl h-80 lg:h-full min-h-[380px]">
+            <div className="rounded-3xl overflow-hidden shadow-xl h-64 sm:h-80 lg:h-full lg:min-h-[380px]">
               <ImageWithFallback
                 src={taviraImg}
                 alt="Ponte Romana de Tavira sobre o rio Gilão e casario tradicional algarvio"
@@ -372,7 +372,7 @@ export default function RiaFormosaPage() {
         {/* 04. O Algarve & Interactive Itinerary Guide */}
         <motion.section
           {...fadeInUp}
-          className="bg-white rounded-3xl md:rounded-[2.5rem] p-6 sm:p-8 md:p-14 border border-principal/10"
+          className="bg-white rounded-3xl md:rounded-[2.5rem] p-5 sm:p-8 md:p-14 border border-principal/10"
         >
           <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 lg:gap-8 pb-8 lg:pb-10 border-b border-principal/10">
             <div className="space-y-3 max-w-2xl">
@@ -392,7 +392,7 @@ export default function RiaFormosaPage() {
             <div
               role="tablist"
               aria-label="Guias de descoberta na região"
-              className="flex flex-wrap sm:inline-flex w-full sm:w-auto gap-1.5 p-1.5 bg-branco-quente rounded-2xl border border-principal/10 shrink-0"
+              className="grid grid-cols-1 min-[420px]:grid-cols-2 sm:inline-flex w-full sm:w-auto gap-1.5 p-1.5 bg-branco-quente rounded-2xl border border-principal/10 shrink-0"
             >
               {(
                 [
@@ -410,14 +410,14 @@ export default function RiaFormosaPage() {
                     role="tab"
                     aria-selected={active}
                     onClick={() => setActiveGuideTab(tab.id)}
-                    className={`flex-1 sm:flex-initial flex items-center justify-center gap-2 min-h-[44px] px-3 sm:px-4 py-2.5 rounded-xl text-xs font-semibold transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
+                    className={`min-[420px]:last:col-span-2 sm:last:col-span-1 flex items-center justify-center gap-2 min-h-[44px] px-3 sm:px-4 py-2.5 rounded-xl text-xs font-semibold transition-colors sm:whitespace-nowrap text-center cursor-pointer ${
                       active
                         ? 'bg-principal text-white shadow-sm'
                         : 'text-principal/70 hover:text-principal'
                     }`}
                   >
                     <Icon className="w-3.5 h-3.5 shrink-0" />
-                    {tab.label}
+                    <span>{tab.label}</span>
                   </button>
                 );
               })}
@@ -472,14 +472,14 @@ export default function RiaFormosaPage() {
           <div className="flex flex-col sm:flex-row sm:flex-wrap gap-3 sm:gap-4 shrink-0 w-full lg:w-auto">
             <Link
               to="/reservar"
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-3 bg-secundaria text-principal min-h-[48px] px-8 py-4 rounded-full font-bold text-xs uppercase tracking-[0.18em] hover:bg-white transition-colors whitespace-nowrap"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 sm:gap-3 bg-secundaria text-principal min-h-[48px] px-5 sm:px-8 py-4 rounded-full font-bold text-[11px] sm:text-xs uppercase tracking-[0.14em] sm:tracking-[0.18em] hover:bg-white transition-colors sm:whitespace-nowrap text-center"
             >
-              Verificar Disponibilidade
-              <ArrowRight className="w-4 h-4" />
+              <span>Verificar Disponibilidade</span>
+              <ArrowRight className="w-4 h-4 shrink-0" />
             </Link>
             <Link
               to="/alojamentos"
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-3 border border-white/30 text-white min-h-[48px] px-8 py-4 rounded-full font-bold text-xs uppercase tracking-[0.18em] hover:bg-white hover:text-principal transition-colors whitespace-nowrap"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-3 border border-white/30 text-white min-h-[48px] px-5 sm:px-8 py-4 rounded-full font-bold text-[11px] sm:text-xs uppercase tracking-[0.14em] sm:tracking-[0.18em] hover:bg-white hover:text-principal transition-colors sm:whitespace-nowrap text-center"
             >
               Ver Alojamentos
             </Link>
